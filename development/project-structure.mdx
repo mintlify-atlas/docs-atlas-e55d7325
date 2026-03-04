@@ -1,0 +1,971 @@
+---
+title: Project Structure
+description: Directory organization, file conventions, and code structure in Arre
+---
+
+## Repository Overview
+
+Arre follows a monorepo structure with frontend and backend code in the same repository:
+
+```
+arre/
+├── src/                    # Frontend React application
+├── functions/              # Firebase Cloud Functions (backend)
+├── public/                 # Static assets
+├── tests/                  # E2E tests (Playwright)
+├── docs/                   # Project documentation
+├── scripts/                # Build and deployment scripts
+├── firebase.json           # Firebase configuration
+├── firestore.rules         # Firestore security rules
+├── firestore.indexes.json  # Firestore composite indexes
+├── storage.rules           # Cloud Storage security rules
+├── package.json            # Frontend dependencies
+├── vite.config.ts          # Vite build configuration
+├── tsconfig.json           # TypeScript configuration
+└── playwright.config.ts    # E2E test configuration
+```
+
+## Frontend Structure (`src/`)
+
+### Directory Tree
+
+```
+src/
+├── features/              # Feature-based modules
+│   ├── ai-briefing/
+│   │   └── hooks/
+│   │       └── useBriefingData.ts
+│   ├── dashboard/
+│   │   ├── DashboardStats.tsx
+│   │   ├── DashboardStats.module.css
+│   │   ├── VelocityChart.tsx
+│   │   ├── EnergyFilter.tsx
+│   │   ├── EnergyFilter.module.css
+│   │   └── useDashboardStats.ts
+│   ├── projects/
+│   │   ├── ProjectModal.tsx
+│   │   ├── ProjectModal.module.css
+│   │   └── hooks/
+│   │       └── useProjects.ts
+│   ├── tasks/
+│   │   ├── TaskItem.tsx
+│   │   ├── TaskItem.module.css
+│   │   ├── TaskEditorModal.tsx
+│   │   ├── TaskEditorModal.module.css
+│   │   └── hooks/
+│   │       └── useTasks.ts
+│   └── theme/
+│       └── ThemeProvider.tsx
+├── layout/                # Layout components
+│   ├── MainLayout.tsx
+│   ├── MainLayout.module.css
+│   ├── Sidebar.tsx
+│   ├── Sidebar.module.css
+│   ├── BottomNav.tsx
+│   └── BottomNav.module.css
+├── lib/                   # Core utilities and configurations
+│   ├── firebase.ts
+│   ├── auth/
+│   │   ├── AuthContext.tsx
+│   │   └── ProtectedRoute.tsx
+│   └── types/
+│       └── firestore.ts
+├── pages/                 # Route-level views
+│   ├── Dashboard.tsx
+│   ├── Dashboard.module.css
+│   ├── Inbox.tsx
+│   ├── Inbox.module.css
+│   ├── Upcoming.tsx
+│   ├── Anytime.tsx
+│   ├── Someday.tsx
+│   ├── Logbook.tsx
+│   ├── Logbook.module.css
+│   ├── AIBriefing.tsx
+│   ├── AIBriefing.module.css
+│   ├── Login.tsx
+│   ├── Login.module.css
+│   ├── Settings.tsx
+│   └── Settings.module.css
+├── shared/                # Shared types and utilities
+│   ├── types/
+│   │   └── task.ts
+│   └── data/
+│       └── mockData.ts
+├── styles/                # Global styles
+│   ├── global.css
+│   └── variables.css
+├── dev/                   # Development utilities
+│   └── SeedButton.tsx
+├── App.tsx                # Root application component
+├── main.tsx               # Application entry point
+└── vite-env.d.ts          # Vite type declarations
+```
+
+### Feature Modules (`src/features/`)
+
+Features are organized by domain, with related components, hooks, and styles co-located.
+
+<Tabs>
+  <Tab title="tasks/">
+    Task management feature - the core of Arre:
+
+    ```
+    src/features/tasks/
+    ├── TaskItem.tsx              # Individual task row component
+    ├── TaskItem.module.css
+    ├── TaskEditorModal.tsx       # Task creation/editing modal
+    ├── TaskEditorModal.module.css
+    └── hooks/
+        └── useTasks.ts           # Task CRUD operations + real-time sync
+    ```
+
+    **Key File:** `useTasks.ts` ([src/features/tasks/hooks/useTasks.ts:1](/home/daytona/workspace/source/src/features/tasks/hooks/useTasks.ts:1))
+
+    Provides:
+    - `tasks` - Real-time task list
+    - `addTask()` - Create new task
+    - `updateTask()` - Update existing task
+    - `deleteTask()` - Delete task
+    - View filtering (inbox, today, upcoming, etc.)
+
+    ```tsx
+    // Usage example
+    const { tasks, loading, addTask, updateTask } = useTasks('inbox');
+    ```
+  </Tab>
+
+  <Tab title="projects/">
+    Project management feature:
+
+    ```
+    src/features/projects/
+    ├── ProjectModal.tsx
+    ├── ProjectModal.module.css
+    └── hooks/
+        └── useProjects.ts
+    ```
+
+    Projects allow users to organize tasks with colored labels. Each project has:
+    - Title
+    - Color (from predefined palette)
+    - Timestamp metadata
+  </Tab>
+
+  <Tab title="dashboard/">
+    Dashboard analytics and statistics:
+
+    ```
+    src/features/dashboard/
+    ├── DashboardStats.tsx        # Stats card grid
+    ├── DashboardStats.module.css
+    ├── VelocityChart.tsx         # 7-day completion chart
+    ├── EnergyFilter.tsx          # Energy level filter
+    ├── EnergyFilter.module.css
+    └── useDashboardStats.ts      # Real-time stats calculation
+    ```
+
+    **Key File:** `useDashboardStats.ts` ([src/features/dashboard/useDashboardStats.ts:1](/home/daytona/workspace/source/src/features/dashboard/useDashboardStats.ts:1))
+
+    Calculates:
+    - Tasks completed today
+    - Efficiency trend (vs. yesterday)
+    - High-focus tasks
+    - 7-day velocity data for chart
+
+    ```tsx
+    // src/features/dashboard/useDashboardStats.ts:22-33
+    export interface DashboardStatsData {
+      velocityData: VelocityDay[];
+      efficiencyTrend: number;
+      highFocusToday: number;
+      focusTrend: number;
+      tasksDoneToday: number;
+      dailyGoal: number;
+      loading: boolean;
+    }
+    ```
+  </Tab>
+
+  <Tab title="ai-briefing/">
+    AI-powered daily briefing:
+
+    ```
+    src/features/ai-briefing/
+    └── hooks/
+        └── useBriefingData.ts
+    ```
+
+    Fetches and manages AI-generated briefings from Cloud Functions.
+  </Tab>
+
+  <Tab title="theme/">
+    Theme management:
+
+    ```
+    src/features/theme/
+    └── ThemeProvider.tsx
+    ```
+
+    Provides theme context and handles switching between light/dark modes by toggling `data-theme` attribute on document root.
+  </Tab>
+</Tabs>
+
+### Pages (`src/pages/`)
+
+Route-level components that compose features into full views.
+
+<AccordionGroup>
+  <Accordion title="Dashboard.tsx">
+    Main overview page at `/`:
+
+    - Shows stats cards (efficiency, focus, progress)
+    - Displays velocity chart
+    - Energy filter
+    - Today's tasks preview
+
+    **File:** [src/pages/Dashboard.tsx:1](/home/daytona/workspace/source/src/pages/Dashboard.tsx:1)
+  </Accordion>
+
+  <Accordion title="Inbox.tsx">
+    Unscheduled tasks at `/inbox`:
+
+    - Tasks without a date
+    - Quick capture area
+    - Drag-and-drop to schedule
+
+    **File:** [src/pages/Inbox.tsx:1](/home/daytona/workspace/source/src/pages/Inbox.tsx:1)
+  </Accordion>
+
+  <Accordion title="Upcoming.tsx">
+    Future tasks at `/upcoming`:
+
+    - Tasks scheduled for tomorrow and beyond
+    - Grouped by date
+    - Week-at-a-glance view
+
+    **File:** [src/pages/Upcoming.tsx:1](/home/daytona/workspace/source/src/pages/Upcoming.tsx:1)
+  </Accordion>
+
+  <Accordion title="Anytime.tsx">
+    Flexible tasks at `/anytime`:
+
+    - Tasks without specific dates
+    - Can be done whenever time permits
+
+    **File:** [src/pages/Anytime.tsx:1](/home/daytona/workspace/source/src/pages/Anytime.tsx:1)
+  </Accordion>
+
+  <Accordion title="Someday.tsx">
+    Deferred tasks at `/someday`:
+
+    - Tasks with `status: 'someday'`
+    - Ideas and future projects
+    - Not actively tracked in velocity
+
+    **File:** [src/pages/Someday.tsx:1](/home/daytona/workspace/source/src/pages/Someday.tsx:1)
+  </Accordion>
+
+  <Accordion title="Logbook.tsx">
+    Completed tasks at `/logbook`:
+
+    - Historical record of accomplishments
+    - Ordered by completion date
+    - Supports searching and filtering
+
+    **Query:** [src/features/tasks/hooks/useTasks.ts:162-168](/home/daytona/workspace/source/src/features/tasks/hooks/useTasks.ts:162-168)
+
+    ```tsx
+    case 'logbook':
+      q = query(
+        tasksRef, 
+        where('status', '==', 'completed'), 
+        orderBy('completedAt', 'desc')
+      );
+      break;
+    ```
+  </Accordion>
+
+  <Accordion title="AIBriefing.tsx">
+    AI-generated briefing at `/briefing`:
+
+    - Personalized daily summary
+    - Generated by Gemini 2.5 Flash
+    - Markdown rendering
+
+    **File:** [src/pages/AIBriefing.tsx:1](/home/daytona/workspace/source/src/pages/AIBriefing.tsx:1)
+  </Accordion>
+
+  <Accordion title="Settings.tsx">
+    User settings at `/settings`:
+
+    - Theme preferences
+    - Google Tasks integration
+    - Account management
+
+    **File:** [src/pages/Settings.tsx:1](/home/daytona/workspace/source/src/pages/Settings.tsx:1)
+  </Accordion>
+
+  <Accordion title="Login.tsx">
+    Authentication page at `/login`:
+
+    - Google sign-in
+    - Anonymous sign-in
+    - Not protected (only public route)
+
+    **File:** [src/pages/Login.tsx:1](/home/daytona/workspace/source/src/pages/Login.tsx:1)
+  </Accordion>
+</AccordionGroup>
+
+### Layout (`src/layout/`)
+
+Structural components that wrap pages:
+
+<Tabs>
+  <Tab title="MainLayout.tsx">
+    Primary app layout shell:
+
+    ```tsx
+    <MainLayout>
+      <Sidebar />        {/* Desktop navigation */}
+      <main>
+        <Outlet />       {/* Page content */}
+      </main>
+      <BottomNav />      {/* Mobile navigation */}
+    </MainLayout>
+    ```
+
+    **File:** [src/layout/MainLayout.tsx:1](/home/daytona/workspace/source/src/layout/MainLayout.tsx:1)
+
+    - Responsive layout
+    - Sidebar for desktop
+    - Bottom nav for mobile
+  </Tab>
+
+  <Tab title="Sidebar.tsx">
+    Desktop navigation sidebar:
+
+    - Logo and branding
+    - Navigation links
+    - Theme toggle
+    - User menu
+
+    **File:** [src/layout/Sidebar.tsx:1](/home/daytona/workspace/source/src/layout/Sidebar.tsx:1)
+  </Tab>
+
+  <Tab title="BottomNav.tsx">
+    Mobile navigation bar:
+
+    - Fixed bottom position
+    - Icon-based navigation
+    - Shows on mobile breakpoints only
+
+    **File:** [src/layout/BottomNav.tsx:1](/home/daytona/workspace/source/src/layout/BottomNav.tsx:1)
+  </Tab>
+</Tabs>
+
+### Library (`src/lib/`)
+
+Core utilities and third-party service configurations:
+
+<Tabs>
+  <Tab title="firebase.ts">
+    Firebase initialization and configuration:
+
+    ```tsx
+    // src/lib/firebase.ts:1-34
+    import { initializeApp } from 'firebase/app';
+    import { getAuth, connectAuthEmulator } from 'firebase/auth';
+    import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+    import { getStorage, connectStorageEmulator } from 'firebase/storage';
+    import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+
+    const firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    export const auth = getAuth(app);
+    export const db = getFirestore(app);
+    export const storage = getStorage(app);
+    export const functions = getFunctions(app);
+
+    // Development: Connect to emulators
+    if (import.meta.env.DEV) {
+      connectAuthEmulator(auth, 'http://localhost:9099');
+      connectFirestoreEmulator(db, 'localhost', 8080);
+      connectStorageEmulator(storage, 'localhost', 9199);
+      connectFunctionsEmulator(functions, 'localhost', 5001);
+    }
+    ```
+
+    **File:** [src/lib/firebase.ts:1](/home/daytona/workspace/source/src/lib/firebase.ts:1)
+  </Tab>
+
+  <Tab title="auth/AuthContext.tsx">
+    Authentication state and methods:
+
+    ```tsx
+    interface AuthContextType {
+      user: User | null;
+      loading: boolean;
+      signInWithGoogle: () => Promise<void>;
+      signInAnonymouslyUser: () => Promise<void>;
+      logout: () => Promise<void>;
+      connectGoogleTasks: () => Promise<void>;
+      disconnectGoogleTasks: () => Promise<void>;
+    }
+    ```
+
+    **File:** [src/lib/auth/AuthContext.tsx:14-22](/home/daytona/workspace/source/src/lib/auth/AuthContext.tsx:14-22)
+
+    Provides authentication context to entire app via Context API.
+  </Tab>
+
+  <Tab title="auth/ProtectedRoute.tsx">
+    Route guard for authenticated pages:
+
+    ```tsx
+    // Pseudocode pattern
+    function ProtectedRoute({ children }) {
+      const { user, loading } = useAuth();
+      
+      if (loading) return <LoadingSpinner />;
+      if (!user) return <Navigate to="/login" />;
+      
+      return children;
+    }
+    ```
+
+    **File:** [src/lib/auth/ProtectedRoute.tsx:1](/home/daytona/workspace/source/src/lib/auth/ProtectedRoute.tsx:1)
+  </Tab>
+
+  <Tab title="types/firestore.ts">
+    Firestore-specific type definitions:
+
+    - Document shapes as stored in Firestore
+    - Different from client-side `Task` type (uses Timestamp vs string)
+
+    **File:** [src/lib/types/firestore.ts:1](/home/daytona/workspace/source/src/lib/types/firestore.ts:1)
+  </Tab>
+</Tabs>
+
+### Shared (`src/shared/`)
+
+Shared types and utilities used across features:
+
+<Tabs>
+  <Tab title="types/task.ts">
+    Core type definitions:
+
+    ```typescript
+    // src/shared/types/task.ts:1-17
+    export type TaskStatus = 'todo' | 'completed' | 'canceled' | 'someday';
+    export type TaskTag = 'work' | 'personal' | 'errand' | 'urgent';
+
+    export interface Task {
+      id: string;
+      title: string;
+      notes?: string;
+      status: TaskStatus;
+      date?: string;              // ISO date string YYYY-MM-DD
+      isEvening?: boolean;        // "This Evening" feature
+      energy?: 'low' | 'neutral' | 'high';
+      tags?: TaskTag[];
+      projectId?: string;
+      createdAt: string;
+      updatedAt?: string;
+      completedAt?: string;
+    }
+    ```
+
+    Also includes:
+    - `PROJECT_COLORS` - Color palette for projects ([src/shared/types/task.ts:19-30](/home/daytona/workspace/source/src/shared/types/task.ts:19-30))
+    - `Project` interface ([src/shared/types/task.ts:34-39](/home/daytona/workspace/source/src/shared/types/task.ts:34-39))
+
+    **File:** [src/shared/types/task.ts:1](/home/daytona/workspace/source/src/shared/types/task.ts:1)
+  </Tab>
+
+  <Tab title="data/mockData.ts">
+    Mock data for development and testing:
+
+    - Sample tasks
+    - Sample projects
+    - Used during development
+
+    **File:** [src/shared/data/mockData.ts:1](/home/daytona/workspace/source/src/shared/data/mockData.ts:1)
+  </Tab>
+</Tabs>
+
+### Styles (`src/styles/`)
+
+Global CSS and design system:
+
+<Tabs>
+  <Tab title="variables.css">
+    CSS custom properties for theming:
+
+    ```css
+    :root {
+      /* Colors */
+      --color-bg: #ffffff;
+      --color-text: #171717;
+      --color-border: #e5e5e5;
+      
+      /* Accents */
+      --accent-emerald: #10b981;
+      --accent-sapphire: #2563eb;
+      
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      
+      /* Borders */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    [data-theme="dark"] {
+      --color-bg: #0a0a0a;
+      --color-text: #fafafa;
+      --color-border: #262626;
+    }
+    ```
+
+    **File:** [src/styles/variables.css:1](/home/daytona/workspace/source/src/styles/variables.css:1)
+  </Tab>
+
+  <Tab title="global.css">
+    Global resets and base styles:
+
+    - CSS reset
+    - Typography
+    - Default element styles
+    - Utility classes
+
+    **File:** [src/styles/global.css:1](/home/daytona/workspace/source/src/styles/global.css:1)
+
+    Imported once in `App.tsx`:
+    ```tsx
+    // src/App.tsx:10
+    import './styles/global.css';
+    ```
+  </Tab>
+</Tabs>
+
+### Entry Points
+
+<Tabs>
+  <Tab title="main.tsx">
+    Application bootstrap:
+
+    ```tsx
+    // src/main.tsx:1-9
+    import React from 'react'
+    import ReactDOM from 'react-dom/client'
+    import App from './App.tsx'
+
+    ReactDOM.createRoot(document.getElementById('app')!).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    )
+    ```
+
+    **File:** [src/main.tsx:1](/home/daytona/workspace/source/src/main.tsx:1)
+  </Tab>
+
+  <Tab title="App.tsx">
+    Root component with providers and routing:
+
+    ```tsx
+    function App() {
+      return (
+        <ThemeProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Route definitions */}
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ThemeProvider>
+      );
+    }
+    ```
+
+    **File:** [src/App.tsx:18-46](/home/daytona/workspace/source/src/App.tsx:18-46)
+
+    **Provider Order:** Theme → Auth → Router → Routes
+  </Tab>
+</Tabs>
+
+## Backend Structure (`functions/`)
+
+### Cloud Functions Directory
+
+```
+functions/
+├── index.js              # All function exports
+├── package.json          # Node.js dependencies
+└── package-lock.json
+```
+
+<Note>
+  Cloud Functions use CommonJS (Node.js modules), not ES modules like the frontend.
+</Note>
+
+### Functions Defined
+
+**File:** [functions/index.js:1](/home/daytona/workspace/source/functions/index.js:1)
+
+<AccordionGroup>
+  <Accordion title="processMagicImport">
+    **Lines:** [functions/index.js:50-112](/home/daytona/workspace/source/functions/index.js:50-112)
+
+    AI-powered task extraction from documents:
+
+    ```javascript
+    exports.processMagicImport = onCall({ 
+      secrets: [geminiApiKey],
+      memory: "512MiB",
+      timeoutSeconds: 60
+    }, async (request) => {
+      const { fileBase64, mimeType, instructions } = request.data;
+      
+      // 1. Parse file (PDF, CSV, or text)
+      const extractedText = await parseFileContent(fileBase64, mimeType);
+      
+      // 2. Send to Gemini with structured prompt
+      const model = getGeminiModel(geminiApiKey.value());
+      const result = await model.generateContent([systemPrompt, extractedText]);
+      
+      // 3. Parse JSON response
+      const tasks = JSON.parse(result.response.text());
+      
+      return { tasks };
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="generateBriefing">
+    **Lines:** [functions/index.js:118-177](/home/daytona/workspace/source/functions/index.js:118-177)
+
+    Generate personalized daily briefing:
+
+    ```javascript
+    exports.generateBriefing = onCall({
+      secrets: [geminiApiKey],
+      memory: "512MiB",
+      timeoutSeconds: 60
+    }, async (request) => {
+      const { tasks, projects, localTime } = request.data;
+      
+      const systemPrompt = `You are a productivity assistant...`;
+      const contextData = JSON.stringify({ projects, tasks });
+      
+      const model = getGeminiModel(geminiApiKey.value());
+      const result = await model.generateContent([systemPrompt, contextData]);
+      
+      return { briefing: result.response.text() };
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="Google Tasks Integration">
+    Three functions for Google Tasks sync:
+
+    1. **getGoogleTaskLists** ([functions/index.js:207-224](/home/daytona/workspace/source/functions/index.js:207-224))
+       - Fetches available task lists
+
+    2. **getGoogleTasks** ([functions/index.js:230-257](/home/daytona/workspace/source/functions/index.js:230-257))
+       - Fetches tasks from a specific list
+
+    3. **updateGoogleTask** ([functions/index.js:263-290](/home/daytona/workspace/source/functions/index.js:263-290))
+       - Updates task status in Google Tasks
+
+    All use OAuth2 client with refresh tokens stored in Firestore.
+  </Accordion>
+</AccordionGroup>
+
+### Helper Functions
+
+- **`parseFileContent()`** ([functions/index.js:26-44](/home/daytona/workspace/source/functions/index.js:26-44)) - Parse PDF/CSV/text files
+- **`getGeminiModel()`** ([functions/index.js:18-21](/home/daytona/workspace/source/functions/index.js:18-21)) - Initialize Gemini AI client
+- **`getGoogleTasksClient()`** ([functions/index.js:180-201](/home/daytona/workspace/source/functions/index.js:180-201)) - Create authenticated Google API client
+
+## Configuration Files
+
+### Firebase Configuration
+
+<Tabs>
+  <Tab title="firebase.json">
+    Main Firebase project configuration:
+
+    ```json
+    {
+      "hosting": {
+        "public": "dist",
+        "rewrites": [{ "source": "**", "destination": "/index.html" }]
+      },
+      "emulators": {
+        "auth": { "port": 9099 },
+        "functions": { "port": 5001 },
+        "firestore": { "port": 8080 },
+        "storage": { "port": 9199 },
+        "ui": { "enabled": true }
+      },
+      "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+      },
+      "storage": { "rules": "storage.rules" },
+      "functions": [{ "source": "functions", "codebase": "default" }]
+    }
+    ```
+
+    **File:** [firebase.json:1](/home/daytona/workspace/source/firebase.json:1)
+  </Tab>
+
+  <Tab title="firestore.rules">
+    Security rules for Firestore:
+
+    ```javascript
+    // firestore.rules:34-53
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /projects/{projectId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidProject();
+      }
+
+      match /tasks/{taskId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidTask();
+      }
+
+      match /integrations/{integrationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    ```
+
+    **File:** [firestore.rules:1](/home/daytona/workspace/source/firestore.rules:1)
+
+    **Key Principles:**
+    - All data scoped to user ID
+    - Schema validation on writes
+    - No cross-user access
+  </Tab>
+
+  <Tab title="firestore.indexes.json">
+    Composite indexes for complex queries:
+
+    Required for queries with multiple `where()` and `orderBy()` clauses.
+
+    **File:** [firestore.indexes.json:1](/home/daytona/workspace/source/firestore.indexes.json:1)
+  </Tab>
+
+  <Tab title="storage.rules">
+    Security rules for Cloud Storage:
+
+    ```javascript
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    ```
+
+    **File:** [storage.rules:1](/home/daytona/workspace/source/storage.rules:1)
+  </Tab>
+</Tabs>
+
+### Build Configuration
+
+<Tabs>
+  <Tab title="vite.config.ts">
+    Vite build configuration:
+
+    ```typescript
+    // vite.config.ts:1-7
+    import { defineConfig } from 'vite'
+    import react from '@vitejs/plugin-react'
+
+    export default defineConfig({
+      plugins: [react()],
+    })
+    ```
+
+    **File:** [vite.config.ts:1](/home/daytona/workspace/source/vite.config.ts:1)
+
+    Minimal configuration - Vite provides sensible defaults.
+  </Tab>
+
+  <Tab title="tsconfig.json">
+    TypeScript compiler configuration:
+
+    ```json
+    {
+      "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "jsx": "react-jsx",
+        "strict": true,
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true
+      }
+    }
+    ```
+
+    **File:** [tsconfig.json:1](/home/daytona/workspace/source/tsconfig.json:1)
+  </Tab>
+
+  <Tab title="playwright.config.ts">
+    E2E test configuration:
+
+    ```typescript
+    import { defineConfig } from '@playwright/test';
+
+    export default defineConfig({
+      testDir: './tests',
+      use: {
+        baseURL: 'http://localhost:5173',
+      },
+    });
+    ```
+
+    **File:** [playwright.config.ts:1](/home/daytona/workspace/source/playwright.config.ts:1)
+  </Tab>
+</Tabs>
+
+## File Naming Conventions
+
+### Components
+
+- **PascalCase** for component files: `TaskItem.tsx`, `DashboardStats.tsx`
+- **Co-located CSS Modules**: `TaskItem.module.css` next to `TaskItem.tsx`
+- **Hooks**: `use` prefix in camelCase: `useTasks.ts`, `useDashboardStats.ts`
+
+### Types
+
+- **Interfaces**: PascalCase (`Task`, `Project`, `DashboardStatsData`)
+- **Type aliases**: PascalCase (`TaskStatus`, `TaskTag`, `ProjectColor`)
+- **Type files**: lowercase: `task.ts`, `firestore.ts`
+
+### Styles
+
+- **Module CSS**: `*.module.css` (scoped to component)
+- **Global CSS**: `global.css`, `variables.css` (no `.module` suffix)
+
+## Code Organization Principles
+
+### 1. Feature Colocation
+
+Related code lives together:
+
+```
+✅ Good:
+features/tasks/
+  ├── TaskItem.tsx
+  ├── TaskItem.module.css
+  ├── TaskEditorModal.tsx
+  └── hooks/useTasks.ts
+
+❌ Bad:
+components/
+  ├── TaskItem.tsx
+  └── TaskEditorModal.tsx
+styles/
+  └── TaskItem.module.css
+hooks/
+  └── useTasks.ts
+```
+
+### 2. Separation of Concerns
+
+- **Pages**: Route-level composition, no business logic
+- **Features**: Reusable components with domain logic
+- **Hooks**: Data fetching and state management
+- **Lib**: Framework configuration and utilities
+
+### 3. Type Safety
+
+- Shared types in `src/shared/types/`
+- Service-specific types in `src/lib/types/`
+- Component-local types defined in component files
+
+### 4. No Barrel Exports
+
+Explicit imports from exact files instead of `index.ts` re-exports:
+
+```tsx
+✅ Good:
+import { useTasks } from '../features/tasks/hooks/useTasks';
+
+❌ Avoid:
+import { useTasks } from '../features/tasks'; // via index.ts
+```
+
+**Why?** Better tree-shaking, clearer dependencies, easier refactoring.
+
+## Development Workflow
+
+### Local Development
+
+1. Start Firebase emulators:
+   ```bash
+   npm run emulators
+   ```
+
+2. Start dev server (in separate terminal):
+   ```bash
+   npm run dev
+   ```
+
+3. Frontend runs on `http://localhost:5173`
+4. Emulators UI at `http://localhost:4000`
+
+### Adding a New Feature
+
+1. Create feature directory: `src/features/my-feature/`
+2. Add components and hooks
+3. Define types in `src/shared/types/` if needed
+4. Create page in `src/pages/` if route required
+5. Add route to `src/App.tsx`
+6. Update navigation in `src/layout/Sidebar.tsx` and `BottomNav.tsx`
+
+### Testing
+
+E2E tests in `tests/` directory:
+
+```bash
+npm test          # Run tests
+npm run test:ui   # Interactive UI mode
+```
+
+<Warning>
+  Always run tests against emulators, never production.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture Overview" icon="sitemap" href="/development/overview">
+    Understand how the system works at a high level
+  </Card>
+  <Card title="Tech Stack" icon="layer-group" href="/development/tech-stack">
+    Learn about the technologies and their versions
+  </Card>
+</CardGroup>

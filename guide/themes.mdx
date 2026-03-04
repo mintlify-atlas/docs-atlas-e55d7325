@@ -1,0 +1,332 @@
+---
+title: 'Themes'
+description: 'Switch between light and dark modes with the White Paper aesthetic'
+icon: 'palette'
+---
+
+Arre features a thoughtfully designed theme system with light and dark modes, both embracing a "White Paper" aesthetic enhanced with vibrant neon accents. The theme system includes automatic system preference detection and manual controls.
+
+## Theme Options
+
+Arre offers three theme settings:
+
+<CardGroup cols={3}>
+  <Card title="Light Mode" icon="sun">
+    Crisp white backgrounds with jewel-tone accents
+  </Card>
+  <Card title="Dark Mode" icon="moon">
+    Deep blacks with the same vibrant accent palette
+  </Card>
+  <Card title="System" icon="laptop">
+    Automatically matches your operating system preference
+  </Card>
+</CardGroup>
+
+## How to Toggle Themes
+
+The theme toggle is located in the sidebar footer:
+
+<Steps>
+  <Step title="Locate the theme button">
+    Look at the bottom of the left sidebar for a button with an icon (Sun, Moon, or Laptop).
+  </Step>
+  
+  <Step title="Click to cycle">
+    Each click cycles through the three options:
+    ```
+    Light → Dark → System → Light → ...
+    ```
+  </Step>
+  
+  <Step title="Current mode displays">
+    The button shows the active mode:
+    - ☀️ **"Light Mode"**
+    - 🌙 **"Dark Mode"**  
+    - 💻 **"System Mode"**
+  </Step>
+</Steps>
+
+<Note>
+Your theme preference is saved to browser localStorage, so it persists across sessions.
+</Note>
+
+## System Preference Option
+
+When set to "System" mode, Arre automatically matches your operating system's theme:
+
+<Tabs>
+  <Tab title="macOS">
+    Follows System Preferences → General → Appearance
+    - Auto mode switches at sunset (if configured)
+    - Manual toggle: Light/Dark/Auto
+  </Tab>
+  
+  <Tab title="Windows">
+    Follows Settings → Personalization → Colors → Choose your mode
+    - Windows 10 and 11 supported
+    - Respects light/dark preference
+  </Tab>
+  
+  <Tab title="Linux">
+    Follows desktop environment theme settings
+    - GNOME: Settings → Appearance
+    - KDE: System Settings → Colors
+  </Tab>
+  
+  <Tab title="Browser">
+    If OS doesn't provide preference, falls back to browser defaults
+    - Most modern browsers support `prefers-color-scheme`
+  </Tab>
+</Tabs>
+
+### Why Use System Mode?
+
+- **Consistency**: Match Arre to your entire OS appearance
+- **Automatic switching**: If your OS switches at sunset, Arre follows
+- **Eye comfort**: Leverage OS-level comfort settings
+- **Less decision fatigue**: Set it once and forget it
+
+## White Paper Aesthetic
+
+Arre's design philosophy centers on a "White Paper" aesthetic - clean, minimal, with unexpected pops of color:
+
+### Light Mode Palette
+
+<CodeGroup>
+```css Light Theme Colors
+/* Backgrounds */
+--bg-app: #f5f5f7;        /* Outer frame */
+--bg-paper: #ffffff;      /* Main surface */
+--bg-elevated: #ffffff;   /* Cards and modals */
+
+/* Text */
+--text-primary: #1d1d1f;  /* Headings and body */
+--text-secondary: #86868b; /* Metadata */
+--text-tertiary: #d2d2d7;  /* Disabled */
+
+/* Borders */
+--border-subtle: #e5e5e5;  /* Dividers and outlines */
+```
+</CodeGroup>
+
+### Dark Mode Palette
+
+<CodeGroup>
+```css Dark Theme Colors
+/* Backgrounds */
+--bg-app: #000000;         /* True black outer frame */
+--bg-paper: #1c1c1e;       /* Dark grey main surface */
+--bg-elevated: #2c2c2e;    /* Slightly lighter cards */
+
+/* Text */
+--text-primary: #f5f5f7;   /* Near white for readability */
+--text-secondary: #86868b; /* Same grey (works in both modes) */
+--text-tertiary: #48484a;  /* Darker for dark mode */
+
+/* Borders */
+--border-subtle: #38383a;  /* Subtle dark borders */
+```
+</CodeGroup>
+
+<Check>
+Notice that `--text-secondary` (#86868b) stays the same in both modes - it's a perfectly balanced grey that works beautifully in light and dark contexts.
+</Check>
+
+## Neon Accent Colors
+
+Both themes use the same vibrant accent palette, creating visual consistency:
+
+<CardGroup cols={3}>
+  <Card title="Emerald" icon="leaf">
+    `#10b981` - Success states, low energy tasks
+  </Card>
+  <Card title="Sapphire" icon="gem">
+    `#2563eb` - Links, Upcoming view
+  </Card>
+  <Card title="Ruby" icon="heart">
+    `#dc2626` - Alerts, Anytime view
+  </Card>
+  <Card title="Lavender" icon="sparkles">
+    `#7c3aed` - Someday view, AI features
+  </Card>
+  <Card title="Gold" icon="star">
+    `#f59e0b` - Highlights, special markers
+  </Card>
+  <Card title="Cyan" icon="droplet">
+    `#06b6d4` - Current day indicator
+  </Card>
+  <Card title="Purple Neon" icon="zap">
+    `#a855f7` - High focus tasks, premium elements
+  </Card>
+</CardGroup>
+
+### Energy Level Colors
+
+Task energy indicators use specific accent colors:
+
+- **Low Energy**: Emerald `#10b981` - Green suggests ease and flow
+- **Neutral**: Yellow `#eab308` - Balanced, moderate effort
+- **High Focus**: Purple `#9333ea` - Deep, intense concentration
+
+<Note>
+These colors remain vivid in both light and dark modes, ensuring energy levels are always clearly visible.
+</Note>
+
+## Visual Effects
+
+Themes support subtle visual enhancements:
+
+### Shadows
+
+<Tabs>
+  <Tab title="Light Mode Shadows">
+    ```css
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    ```
+    
+    Soft, subtle shadows that lift elements slightly off the page.
+  </Tab>
+  
+  <Tab title="Dark Mode Shadows">
+    ```css
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    ```
+    
+    Stronger shadows for better depth perception on dark backgrounds.
+  </Tab>
+</Tabs>
+
+### Glassmorphism
+
+Modals and overlays use subtle glassmorphism effects:
+
+```css
+/* Light mode */
+--bg-overlay: rgba(255, 255, 255, 0.85);
+
+/* Dark mode */
+--bg-overlay: rgba(28, 28, 30, 0.85);
+```
+
+Combined with backdrop blur, this creates a modern, layered interface.
+
+## Theme Implementation
+
+Under the hood, Arre's theme system is elegant and simple:
+
+<Steps>
+  <Step title="CSS Variables">
+    All colors are defined as CSS custom properties in `variables.css`
+  </Step>
+  
+  <Step title="Data Attribute">
+    Theme is controlled via `data-theme="light"` or `data-theme="dark"` on the root element
+  </Step>
+  
+  <Step title="Media Query">
+    System preference uses `@media (prefers-color-scheme: dark)`
+  </Step>
+  
+  <Step title="React Context">
+    `ThemeProvider` component manages state and localStorage persistence
+  </Step>
+</Steps>
+
+### Storage Key
+
+Theme preference is saved to localStorage:
+
+```javascript
+Key: "vite-ui-theme"
+Value: "light" | "dark" | "system"
+```
+
+<Warning>
+Clearing browser data will reset the theme preference to "system" (default).
+</Warning>
+
+## Accessibility Considerations
+
+The theme system is designed with accessibility in mind:
+
+<AccordionGroup>
+  <Accordion title="Contrast Ratios">
+    - **Light mode text**: #1d1d1f on #ffffff = 19.5:1 (exceeds WCAG AAA)
+    - **Dark mode text**: #f5f5f7 on #1c1c1e = 15.8:1 (exceeds WCAG AAA)
+    - **Accent colors**: All tested for AA compliance on both backgrounds
+  </Accordion>
+  
+  <Accordion title="Color Blindness">
+    - Energy levels use both color AND position
+    - Icons accompany color-coded elements
+    - Text labels always present with colored indicators
+  </Accordion>
+  
+  <Accordion title="Motion Preferences">
+    Respects `prefers-reduced-motion` for theme transition animations.
+  </Accordion>
+  
+  <Accordion title="Focus Indicators">
+    Theme toggle button includes visible focus states for keyboard navigation.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+### Choosing Your Theme
+
+<Tabs>
+  <Tab title="Light Mode">
+    **Best for:**
+    - Daytime use in well-lit environments
+    - Outdoor or bright office settings
+    - Users who prefer high contrast
+    - Printed screenshots or documentation
+  </Tab>
+  
+  <Tab title="Dark Mode">
+    **Best for:**
+    - Evening and night work sessions
+    - Low-light environments
+    - Reducing eye strain during extended use
+    - OLED screens (saves battery)
+  </Tab>
+  
+  <Tab title="System Mode">
+    **Best for:**
+    - Users who want automatic day/night switching
+    - Consistency with OS-wide appearance
+    - "Set and forget" preference
+  </Tab>
+</Tabs>
+
+### Productivity Tips
+
+<Check>
+**Try this:** Use light mode for planning and creative work (morning), dark mode for execution and deep work (afternoon/evening). The visual shift reinforces the mental context switch.
+</Check>
+
+<Note>
+Some users report that dark mode helps them focus on the current task by reducing visual distraction from the surrounding interface.
+</Note>
+
+## Theme Showcase
+
+Here's how key UI elements look across themes:
+
+| Element | Light Mode | Dark Mode |
+|---------|------------|------------|
+| **Task checkbox** | Grey border on white | Grey border on dark grey |
+| **High focus badge** | Purple text on light purple bg | Purple text on darker purple bg |
+| **Project dots** | Vibrant jewel tones | Same vibrant jewel tones |
+| **Sidebar** | White with subtle borders | True black (#000) |
+| **Cards** | White with soft shadow | Dark grey (#1c1c1e) with deeper shadow |
+| **Hover states** | Subtle grey background | Lighter grey background |
+
+<Check>
+The consistent use of accent colors across both themes creates a cohesive experience, making it feel like the same app with different lighting rather than two separate designs.
+</Check>

@@ -1,0 +1,229 @@
+---
+title: 'Magic Import'
+description: 'Transform documents into actionable tasks using AI-powered extraction'
+icon: 'sparkles'
+---
+
+## Overview
+
+Magic Import uses Google's Gemini 2.5 Flash model to automatically extract actionable tasks from your documents. Upload a PDF or CSV file, and Arre will analyze the content and generate a list of tasks ready to import.
+
+<Note>
+  Magic Import is powered by **Gemini 2.5 Flash**, providing fast and accurate task extraction from your documents.
+</Note>
+
+## Supported File Types
+
+Magic Import currently supports:
+
+- **PDF files** (.pdf) - Meeting notes, reports, articles, presentations
+- **CSV files** (.csv) - Spreadsheets, data exports, lists
+- **Text files** (.txt) - Plain text documents
+
+**Maximum file size**: 25MB
+
+**Reference**: `TaskEditorModal.tsx:297, functions/index.js:26-44`
+
+## How It Works
+
+When you upload a file, Arre:
+
+1. Extracts text content from the document
+2. Sends the content to Gemini 2.5 with specialized prompts
+3. Receives a list of actionable tasks
+4. Displays them for review before importing
+
+The AI is trained to:
+- Extract clear, actionable task titles
+- Focus on verifiable actions (not vague ideas)
+- Prioritize the most important tasks if the document is large
+- Limit results to the top 10 tasks for manageability
+
+**Reference**: `functions/index.js:72-83`
+
+## Using Magic Import
+
+<Steps>
+  <Step title="Open the Task Editor">
+    Click the **New Task** button or press `Cmd+K`. The modal opens on the **Magic Import** tab by default.
+  </Step>
+
+  <Step title="Upload Your Document">
+    Click the drop zone or drag and drop a PDF or CSV file. Files up to 25MB are supported.
+
+    **Reference**: `TaskEditorModal.tsx:285-305`
+  </Step>
+
+  <Step title="Wait for Analysis">
+    Arre displays an animated scanner while processing your document. This typically takes 3-10 seconds depending on file size.
+
+    **Reference**: `TaskEditorModal.tsx:325-331`
+  </Step>
+
+  <Step title="Review Generated Tasks">
+    The AI returns a list of tasks extracted from your document. Each task appears with a checkbox preview.
+
+    **Reference**: `TaskEditorModal.tsx:333-342`
+  </Step>
+
+  <Step title="Import All Tasks">
+    Click **Import All Tasks** to add them to your inbox. All tasks are created with:
+    - Energy level: Neutral
+    - Status: Todo
+    - Notes: "Imported via Magic Import"
+
+    **Reference**: `TaskEditorModal.tsx:343-360`
+  </Step>
+</Steps>
+
+## Custom Instructions
+
+You can provide custom instructions to guide the AI's extraction. For example:
+
+- "Only extract high-priority action items"
+- "Focus on tasks for the engineering team"
+- "Extract deliverables with deadlines"
+
+Custom instructions are passed to the AI model and influence which tasks are extracted and how they're formatted.
+
+**Reference**: `functions/index.js:61, 82`
+
+<Warning>
+  Custom instructions are currently available via API but not yet exposed in the UI. This feature will be added in a future update.
+</Warning>
+
+## Recent Magic Imports
+
+The Magic Import interface shows your recent imports for easy reference:
+
+- **Q4_Roadmap_Final.pdf** - 2 hours ago
+- **Inventory_List_Oct.csv** - Yesterday
+
+This helps you remember what you've already processed and avoid duplicate imports.
+
+**Reference**: `TaskEditorModal.tsx:306-323`
+
+<Note>
+  Recent imports are currently static examples in the UI. They will be connected to your actual import history in a future release.
+</Note>
+
+## How Documents Are Processed
+
+<Tabs>
+  <Tab title="PDF Files">
+    PDF files are processed using the `pdf-parse` library:
+
+    1. File is converted from base64 to a buffer
+    2. Text content is extracted from all pages
+    3. Text is sent to Gemini for task extraction
+
+    **Reference**: `functions/index.js:29-32`
+  </Tab>
+
+  <Tab title="CSV Files">
+    CSV files are parsed into structured data:
+
+    1. File is decoded from base64
+    2. Rows are parsed with headers as column names
+    3. Data is converted to JSON format
+    4. Structured data is sent to Gemini for interpretation
+
+    **Reference**: `functions/index.js:34-40`
+  </Tab>
+
+  <Tab title="Text Files">
+    Plain text files are the simplest:
+
+    1. File is decoded from base64 to UTF-8
+    2. Raw text is sent directly to Gemini
+
+    **Reference**: `functions/index.js:43`
+  </Tab>
+</Tabs>
+
+## AI Prompt Engineering
+
+Arre uses carefully crafted prompts to ensure high-quality task extraction:
+
+```javascript
+You are an expert productivity assistant for the "Arre" app.
+Your goal is to extract actionable tasks from the provided document content.
+
+Rules:
+1. Return ONLY a valid JSON array of strings. No markdown, no explanations.
+2. Each string must be a clear, actionable task title.
+3. If specific instructions are provided, prioritize them.
+4. Limit to the top 10 most important tasks if the document is large.
+```
+
+**Reference**: `functions/index.js:72-83`
+
+## Error Handling
+
+If Magic Import encounters an error:
+
+- **File too large**: Reduce file size below 25MB
+- **Unsupported format**: Convert to PDF, CSV, or TXT
+- **AI processing failed**: Try again or upload a different file
+- **Authentication required**: Make sure you're logged in
+
+**Reference**: `TaskEditorModal.tsx:94-96, functions/index.js:108-111`
+
+## Privacy & Security
+
+<CardGroup cols={2}>
+  <Card title="Authentication Required" icon="lock">
+    Only authenticated users can use Magic Import. Files are processed securely through Firebase Cloud Functions.
+  </Card>
+
+  <Card title="No Permanent Storage" icon="shield">
+    Uploaded files are processed in memory and immediately discarded. Arre doesn't store your documents on servers.
+  </Card>
+
+  <Card title="Gemini API" icon="brain">
+    Document content is sent to Google's Gemini API for processing. See Google's privacy policy for details.
+  </Card>
+
+  <Card title="Context Window Limit" icon="file">
+    Only the first 30,000 characters are sent to the AI to stay within API limits and ensure fast processing.
+  </Card>
+</CardGroup>
+
+**Reference**: `functions/index.js:57-59, 91`
+
+## Tips for Best Results
+
+<Accordion title="Prepare your documents">
+  Clean, well-formatted documents produce better results. If your PDF is scanned images, use OCR first to convert it to text.
+</Accordion>
+
+<Accordion title="Be specific with instructions">
+  When custom instructions are available, guide the AI with specific requests like "Extract only tasks with explicit deadlines" or "Focus on action items from the executive summary."
+</Accordion>
+
+<Accordion title="Review before importing">
+  Always review the generated tasks before clicking Import All. The AI is smart but not perfect - you might want to edit or remove some suggestions.
+</Accordion>
+
+<Accordion title="Break large documents into sections">
+  If you have a 100-page report, consider splitting it into smaller PDFs by chapter. This gives you more control over which tasks are extracted.
+</Accordion>
+
+## Use Cases
+
+- **Meeting notes**: Extract action items from meeting transcripts
+- **Project plans**: Convert roadmap documents into task lists
+- **Email exports**: Process saved emails for follow-up tasks
+- **Research papers**: Pull out key points to explore further
+- **Spreadsheets**: Convert data rows into individual tasks
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Task Management" icon="check-circle" href="/features/task-management">
+    Learn how to organize imported tasks
+  </Card>
+  <Card title="Projects" icon="folder" href="/features/projects">
+    Assign imported tasks to projects
+  </Card>
+</CardGroup>

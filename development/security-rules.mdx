@@ -1,0 +1,410 @@
+---
+title: 'Security Rules'
+description: 'Firestore and Storage security rules for data access control'
+---
+
+## Overview
+
+Arre uses Firebase Security Rules to enforce data access control and validation. Rules ensure users can only access their own data and that all writes conform to the expected schema.
+
+<Warning>
+  Security rules are your last line of defense. Never trust client-side validation alone.
+</Warning>
+
+## Firestore Security Rules
+
+The complete Firestore rules are defined in `firestore.rules`:
+
+### User Data Isolation
+
+All user data is isolated under `/users/{userId}` with strict ownership checks:
+
+```javascript firestore.rules:34-35
+match /users/{userId} {
+  allow read, write: if isOwner(userId);
+```
+
+### Helper Functions
+
+#### isOwner()
+
+Verifies the authenticated user matches the resource owner:
+
+```javascript firestore.rules:6-8
+function isOwner(userId) {
+  return request.auth != null && request.auth.uid == userId;
+}
+```
+
+<ParamField path="userId" type="string" required>
+  The user ID from the document path to verify against `request.auth.uid`.
+</ParamField>
+
+#### isValidProject()
+
+Validates project document schema:
+
+```javascript firestore.rules:11-17
+function isValidProject() {
+  let data = request.resource.data;
+  let color = data.get('color', null);
+  return data.title is string && 
+         data.title.size() > 0 &&
+         (color == null || color is string);
+}
+```
+
+**Validation Rules:**
+- `title` must be a non-empty string
+- `color` must be a string if present
+
+#### isValidTask()
+
+Validates task document schema:
+
+```javascript firestore.rules:20-31
+function isValidTask() {
+  let data = request.resource.data;
+  let status = data.get('status', null);
+  let projectId = data.get('projectId', null);
+  
+  return data.title is string && 
+         data.title.size() > 0 &&
+         status in ['todo', 'completed', 'canceled', 'someday'] &&
+         (projectId == null || projectId is string);
+}
+```
+
+**Validation Rules:**
+- `title` must be a non-empty string
+- `status` must be one of: `'todo'`, `'completed'`, `'canceled'`, `'someday'`
+- `projectId` must be a string if present
+
+### Collection Rules
+
+#### Projects Collection
+
+```javascript firestore.rules:38-41
+match /projects/{projectId} {
+  allow read, delete: if isOwner(userId);
+  allow create, update: if isOwner(userId) && isValidProject();
+}
+```
+
+<Tabs>
+  <Tab title="Read & Delete">
+    **Permission:** User must own the parent document
+
+    ```javascript
+    allow read, delete: if isOwner(userId);
+    ```
+
+    No schema validation required for reads and deletes.
+  </Tab>
+  <Tab title="Create & Update">
+    **Permission:** User must own the parent document AND document must pass validation
+
+    ```javascript
+    allow create, update: if isOwner(userId) && isValidProject();
+    ```
+
+    Enforces:
+    - Non-empty `title`
+    - Valid `color` format
+  </Tab>
+</Tabs>
+
+#### Tasks Collection
+
+```javascript firestore.rules:44-47
+match /tasks/{taskId} {
+  allow read, delete: if isOwner(userId);
+  allow create, update: if isOwner(userId) && isValidTask();
+}
+```
+
+<Tabs>
+  <Tab title="Read & Delete">
+    **Permission:** User must own the parent document
+
+    ```javascript
+    allow read, delete: if isOwner(userId);
+    ```
+  </Tab>
+  <Tab title="Create & Update">
+    **Permission:** User must own the parent document AND document must pass validation
+
+    ```javascript
+    allow create, update: if isOwner(userId) && isValidTask();
+    ```
+
+    Enforces:
+    - Non-empty `title`
+    - Valid `status` enum value
+    - Valid `projectId` format if present
+  </Tab>
+</Tabs>
+
+#### Integrations Collection
+
+```javascript firestore.rules:50-52
+match /integrations/{integrationId} {
+  allow read, write: if isOwner(userId);
+}
+```
+
+<Warning>
+  No schema validation on integrations to allow flexibility for different OAuth providers. Handle validation in client code.
+</Warning>
+
+## Storage Security Rules
+
+Cloud Storage rules isolate user files by UID:
+
+```javascript storage.rules:1-9
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+### Path Structure
+
+```
+/users/{userId}/
+  ├── uploads/
+  ├── exports/
+  └── {allPaths=**}
+```
+
+**Access Rules:**
+- Users can read/write ANY file under their own `/users/{userId}/` path
+- No access to other users' files
+- Authentication required for all operations
+
+<Note>
+  The `{allPaths=**}` wildcard matches all nested paths, allowing flexible file organization.
+</Note>
+
+## Testing Security Rules
+
+### Firestore Rules Testing
+
+Use the Firebase Emulator Suite to test rules locally:
+
+```bash
+npm run emulators
+```
+
+#### Test Script Example
+
+```javascript
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+
+let testEnv;
+
+before(async () => {
+  testEnv = await initializeTestEnvironment({
+    projectId: 'test-project',
+    firestore: {
+      rules: fs.readFileSync('firestore.rules', 'utf8'),
+    },
+  });
+});
+
+it('should allow user to read their own tasks', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const taskRef = alice.firestore().doc('users/alice/tasks/task1');
+  
+  await assertSucceeds(taskRef.get());
+});
+
+it('should deny reading other users tasks', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const taskRef = alice.firestore().doc('users/bob/tasks/task1');
+  
+  await assertFails(taskRef.get());
+});
+```
+
+### Storage Rules Testing
+
+```javascript
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+
+it('should allow user to upload to their own folder', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const fileRef = alice.storage().ref('users/alice/uploads/file.pdf');
+  
+  await assertSucceeds(fileRef.put(new Uint8Array([1, 2, 3])));
+});
+
+it('should deny uploading to other users folder', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const fileRef = alice.storage().ref('users/bob/uploads/file.pdf');
+  
+  await assertFails(fileRef.put(new Uint8Array([1, 2, 3])));
+});
+```
+
+## Common Security Patterns
+
+### Authenticated User Check
+
+```javascript
+if (request.auth != null) {
+  // User is authenticated
+}
+```
+
+### Field Validation
+
+```javascript
+let data = request.resource.data;
+
+// Check field exists and is string
+data.title is string
+
+// Check string is non-empty
+data.title.size() > 0
+
+// Check value is in enum
+data.status in ['todo', 'completed', 'canceled']
+
+// Check optional field
+data.get('projectId', null) == null || data.projectId is string
+```
+
+### Ownership Verification
+
+```javascript
+function isOwner(userId) {
+  return request.auth != null && request.auth.uid == userId;
+}
+
+match /users/{userId}/tasks/{taskId} {
+  allow read: if isOwner(userId);
+}
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Default Deny">
+    Start with all access denied and explicitly allow specific operations:
+
+    ```javascript
+    match /databases/{database}/documents {
+      // Default: all access denied unless explicitly allowed below
+      match /users/{userId} {
+        allow read: if isOwner(userId);
+      }
+    }
+    ```
+  </Step>
+  <Step title="Validate All Fields">
+    Always validate type, format, and constraints for user-submitted data:
+
+    ```javascript
+    function isValidTask() {
+      let data = request.resource.data;
+      return data.title is string && 
+             data.title.size() > 0 &&
+             data.status in ['todo', 'completed', 'canceled', 'someday'];
+    }
+    ```
+  </Step>
+  <Step title="Use Helper Functions">
+    Extract common validation logic into reusable functions:
+
+    ```javascript
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    ```
+  </Step>
+  <Step title="Test Thoroughly">
+    Write unit tests for all security rules using the Firebase Emulator Suite.
+  </Step>
+  <Step title="Limit Data Exposure">
+    Only allow access to fields that users genuinely need to read or modify.
+  </Step>
+</Steps>
+
+## Deployment
+
+### Deploy Firestore Rules
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+### Deploy Storage Rules
+
+```bash
+firebase deploy --only storage:rules
+```
+
+### Deploy All Rules
+
+```bash
+firebase deploy --only firestore:rules,storage:rules
+```
+
+<Warning>
+  Rules take effect immediately after deployment. Test thoroughly in the emulator before deploying to production.
+</Warning>
+
+## Debugging Rules
+
+### Check Rule Evaluation in Console
+
+1. Open Firebase Console → Firestore Database
+2. Click "Rules" tab
+3. Use "Rules Playground" to simulate requests
+
+### View Denied Requests
+
+Security rule violations appear in Cloud Logging:
+
+```bash
+firebase functions:log --only firestore
+```
+
+### Common Error Messages
+
+<Tabs>
+  <Tab title="Permission Denied">
+    ```
+    Error: Missing or insufficient permissions
+    ```
+
+    **Cause:** `isOwner()` check failed or user not authenticated
+
+    **Fix:** Verify `request.auth.uid` matches the document owner
+  </Tab>
+  <Tab title="Invalid Argument">
+    ```
+    Error: Invalid data structure
+    ```
+
+    **Cause:** Schema validation failed (e.g., invalid `status` value)
+
+    **Fix:** Check `isValidTask()` or `isValidProject()` requirements
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Firestore Schema" icon="database" href="/development/firestore-schema">
+    Understand the data structures being validated
+  </Card>
+  <Card title="Cloud Functions" icon="bolt" href="/development/cloud-functions">
+    Learn how functions interact with secured data
+  </Card>
+</CardGroup>

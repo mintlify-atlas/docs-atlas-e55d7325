@@ -1,0 +1,304 @@
+---
+title: 'Planning Views'
+description: 'Navigate your tasks across Today, Upcoming, Anytime, and Someday'
+icon: 'calendar-days'
+---
+
+Arre organizes your tasks across four planning views, each designed for a specific time horizon and mental context. Understanding when to use each view is key to staying organized without feeling overwhelmed.
+
+## Today View
+
+Your daily execution dashboard showing tasks scheduled for today.
+
+### Layout
+
+The Today view displays:
+
+```
+Today
+Fri, March 04
+
+□ Review Q1 metrics
+□ Team standup at 10am
+□ Draft blog post
+
+━━━━━━━━━━━━━━━━━━━━
+This Evening
+━━━━━━━━━━━━━━━━━━━━
+
+□ Grocery shopping
+□ Call Mom
+```
+
+<Steps>
+  <Step title="Main task list">
+    Tasks scheduled for today appear at the top in a clean, minimal list.
+  </Step>
+  
+  <Step title="Evening section">
+    Tasks marked as `isEvening: true` appear in a separate "This Evening" section below.
+  </Step>
+  
+  <Step title="Empty state">
+    If no tasks are scheduled: "No tasks for today. Enjoy!"
+  </Step>
+</Steps>
+
+### When to Use Today
+
+<CardGroup cols={2}>
+  <Card title="Daily Reviews" icon="sun">
+    Check every morning to see your daily commitments
+  </Card>
+  <Card title="Focused Execution" icon="target">
+    When you want a clean list without distractions from future tasks
+  </Card>
+</CardGroup>
+
+<Note>
+**Pro Tip:** Today view only shows tasks with dates set to today. Use it for execution, not planning.
+</Note>
+
+## Upcoming View
+
+See tasks scheduled for future dates, grouped chronologically.
+
+### Grouped by Date
+
+The Upcoming view organizes tasks into date sections:
+
+```
+Upcoming
+
+Saturday, Mar 05
+□ Weekend project planning
+□ Hiking gear prep
+
+Monday, Mar 07
+□ Client presentation
+□ Budget review meeting
+
+Wednesday, Mar 09
+□ Product launch prep
+```
+
+### Features
+
+- **Chronological grouping**: Tasks organized by their scheduled date
+- **Date formatting**: Full format like "Saturday, March 05"
+- **Quick scanning**: See what's coming at a glance
+- **No date tasks**: Grouped under "No Date" section if present
+
+### When to Use Upcoming
+
+<Tabs>
+  <Tab title="Weekly Planning">
+    Sunday evening: Review next week's commitments and adjust priorities.
+  </Tab>
+  
+  <Tab title="Deadline Awareness">
+    Check what's coming up to avoid surprises and plan prep time.
+  </Tab>
+  
+  <Tab title="Rescheduling">
+    Move tasks between days as your schedule changes.
+  </Tab>
+</Tabs>
+
+<Warning>
+Upcoming only shows tasks with specific dates. Tasks in "Anytime" won't appear here.
+</Warning>
+
+## Anytime View
+
+Project-based task organization for work that doesn't have a specific deadline.
+
+### Grouped by Project
+
+The Anytime view displays tasks organized by their associated projects:
+
+```
+Anytime
+12 tasks across 3 projects
+
+● Website Redesign (5 tasks)
+  □ Update homepage mockups
+  □ Review color palette
+  □ Test mobile navigation
+  □ Optimize images
+  □ Write new copy
+
+● Marketing Campaign (4 tasks)
+  □ Draft social posts
+  □ Design Instagram graphics
+  □ Schedule email sequence
+  □ Update landing page
+
+📋 Single Actions (3 tasks)
+  □ Update LinkedIn profile
+  □ Renew domain registration
+  □ Back up laptop
+```
+
+### Project Header Format
+
+<Steps>
+  <Step title="Project dot">
+    Colored circle indicating the project color (from project settings)
+  </Step>
+  
+  <Step title="Project title">
+    The project name as defined in your projects list
+  </Step>
+  
+  <Step title="Task count">
+    Shows "5 tasks" or "1 task" (singular handling)
+  </Step>
+</Steps>
+
+### Single Actions Section
+
+Tasks without a project assignment appear under "Single Actions" with a layers icon. These are one-off tasks that don't belong to any ongoing project.
+
+### When to Use Anytime
+
+<CardGroup cols={2}>
+  <Card title="Context Switching" icon="folder">
+    When working on a specific project and want to see all related tasks
+  </Card>
+  <Card title="Project Planning" icon="list-check">
+    Planning next actions for a project without committing to dates
+  </Card>
+  <Card title="Energy Dips" icon="battery-low">
+    Choose from project task lists during low-motivation periods
+  </Card>
+  <Card title="Batch Processing" icon="layer-group">
+    Group similar work together (all design tasks, all writing, etc.)
+  </Card>
+</CardGroup>
+
+## Someday View
+
+Your idea parking lot for tasks you might do later.
+
+### Someday / Maybe Philosophy
+
+Someday is based on GTD's "Someday/Maybe" concept: capture ideas without committing to action. This clears mental space while preserving potentially valuable ideas.
+
+```
+Someday / Maybe
+8 ideas parked for later
+
+● Learning (3 tasks)
+  □ Take advanced TypeScript course
+  □ Learn Figma properly
+  □ Read "Designing Data-Intensive Applications"
+
+● Side Projects (2 tasks)
+  □ Build personal portfolio site
+  □ Start photography blog
+
+📦 Loose Ideas (3 tasks)
+  □ Research standing desks
+  □ Plan Japan trip
+  □ Learn to make sourdough
+```
+
+### Activating Someday Tasks
+
+When you're ready to work on a someday task:
+
+<Steps>
+  <Step title="Click the checkbox">
+    This activates the task by changing its status to 'todo'
+  </Step>
+  
+  <Step title="Move to appropriate view">
+    The activated task moves to Anytime or can be scheduled to Today/Upcoming
+  </Step>
+  
+  <Step title="Plan the work">
+    Add a date, assign to a project, or keep in Anytime for flexible execution
+  </Step>
+</Steps>
+
+<Note>
+The Someday view header says "ideas parked" instead of "tasks" - reinforcing that these are possibilities, not commitments.
+</Note>
+
+### When to Use Someday
+
+- **Inbox Zero Practice**: Move "maybe later" tasks here instead of leaving them in Today/Anytime
+- **Weekly Review**: Browse someday tasks to see if any feel relevant now
+- **Idea Capture**: Quickly save ideas without cluttering active task lists
+- **Dream Parking**: Keep aspirational projects visible without guilt
+
+## Moving Tasks Between Views
+
+Tasks automatically appear in different views based on their properties:
+
+| Task Property | Appears In |
+|--------------|------------|
+| `date: today` | Today, Inbox (if high energy) |
+| `date: future` | Upcoming |
+| `date: null, status: todo` | Anytime, Inbox (if high energy) |
+| `status: someday` | Someday |
+| `status: completed` | Logbook |
+| `isEvening: true` | Today (Evening section) |
+
+### Workflow: Planning a Task
+
+<Tabs>
+  <Tab title="Capture">
+    1. Create task (appears in Anytime)
+    2. Assign to project if relevant
+    3. Set energy level
+  </Tab>
+  
+  <Tab title="Schedule">
+    1. Open task editor
+    2. Set a specific date → moves to Today/Upcoming
+    3. Or leave dateless → stays in Anytime
+  </Tab>
+  
+  <Tab title="Defer">
+    1. Not ready to commit? 
+    2. Change status to "someday" → moves to Someday
+    3. Review during weekly planning
+  </Tab>
+  
+  <Tab title="Complete">
+    1. Check off the task
+    2. Automatically moves to Logbook
+    3. Counts toward productivity metrics
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Daily Workflow">
+    1. **Morning**: Check Today view for commitments
+    2. **Work blocks**: Use Inbox with energy filters for deep work
+    3. **Afternoon**: Check Upcoming to prep for tomorrow
+    4. **Evening**: Mark tasks complete, review Evening section
+  </Accordion>
+  
+  <Accordion title="Weekly Review">
+    1. Review Upcoming: Are next week's tasks realistic?
+    2. Check Anytime: Are projects progressing? Any stalled?
+    3. Browse Someday: Activate 1-2 ideas that feel energizing
+    4. Plan 3-5 high-focus tasks for the week
+  </Accordion>
+  
+  <Accordion title="Energy Management">
+    - Schedule high-focus tasks (purple) in Today's morning slots
+    - Keep neutral tasks (yellow) for afternoon context switching
+    - Save low-energy tasks (green) for end-of-day in Evening section
+    - Use Anytime when you're unsure what to work on
+  </Accordion>
+</AccordionGroup>
+
+<Check>
+**Master this flow:** Capture in Anytime → Schedule to Today/Upcoming → Execute via Inbox → Review in Logbook → Defer to Someday if needed.
+</Check>

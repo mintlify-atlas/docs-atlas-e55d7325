@@ -1,80 +1,327 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with Arre in under 5 minutes. Clone the repo, install dependencies, and create your first task.
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
+Get up and running with Arre in under 5 minutes. This guide will walk you through cloning the repository, starting the development server, and creating your first task.
 
-### Step 1: Set up your local environment
+<Info>
+This quickstart uses Firebase emulators for local development. You don't need a Firebase account to get started, but you'll need one for production deployment.
+</Info>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+## Prerequisites
 
-### Step 2: Deploy your changes
+Before you begin, ensure you have:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+- **Node.js 22.12 or higher** installed
+- **npm** package manager
+- A **code editor** (VS Code recommended)
+- Basic familiarity with terminal commands
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<Steps>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<Step title="Clone the Repository">
 
-### Step 3: Go live
+Clone the Arre repository to your local machine:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+```bash
+git clone https://github.com/pedro3087/arre.git
+cd arre
+```
 
-## Next steps
+**Expected output:**
+```
+Cloning into 'arre'...
+remote: Enumerating objects: 1234, done.
+remote: Counting objects: 100% (1234/1234), done.
+remote: Compressing objects: 100% (567/567), done.
+Receiving objects: 100% (1234/1234), 2.34 MiB | 5.67 MiB/s, done.
+```
 
-Now that you have your docs running, explore these key features:
+</Step>
 
-<CardGroup cols={2}>
+<Step title="Install Dependencies">
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+Install all required dependencies using npm:
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+```bash
+npm install
+```
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+This will install:
+- React 19 and React DOM
+- Firebase SDK
+- Vite build tool
+- TypeScript
+- UI libraries (Framer Motion, Lucide Icons, Recharts)
+- Development tools (Playwright, Firebase Tools)
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+**Expected output:**
+```
+added 890 packages, and audited 891 packages in 45s
 
-</CardGroup>
+156 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+```
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+The installation typically takes 30-60 seconds depending on your internet connection and machine performance.
 </Note>
+
+</Step>
+
+<Step title="Start Firebase Emulators">
+
+Start the Firebase emulators for local development. Open a new terminal window and run:
+
+```bash
+npm run emulators
+```
+
+This starts four local services:
+- **Auth Emulator** (port 9099): Mock authentication
+- **Firestore Emulator** (port 8080): Local database
+- **Functions Emulator** (port 5001): Cloud functions
+- **Storage Emulator** (port 9199): File storage
+
+**Expected output:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000                │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator   │ Host:Port      │ View in Emulator UI             │
+├────────────┼────────────────┼─────────────────────────────────┤
+│ Auth       │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth      │
+├────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore  │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+├────────────┼────────────────┼─────────────────────────────────┤
+│ Functions  │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+├────────────┼────────────────┼─────────────────────────────────┤
+│ Storage    │ 127.0.0.1:9199 │ http://127.0.0.1:4000/storage   │
+└────────────┴────────────────┴─────────────────────────────────┘
+```
+
+<Warning>
+Keep this terminal window open! The emulators must run continuously while you develop. If you close this window, the app will lose its connection to the backend services.
+</Warning>
+
+</Step>
+
+<Step title="Start the Development Server">
+
+In your original terminal window (or a new one), start the Vite development server:
+
+```bash
+npm run dev
+```
+
+**Expected output:**
+```
+  VITE v7.3.1  ready in 234 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+
+🔥 Connecting to Firebase Emulators...
+```
+
+<Info>
+The `🔥 Connecting to Firebase Emulators...` message confirms that Arre is using local emulators instead of production Firebase services.
+</Info>
+
+</Step>
+
+<Step title="Open the App and Sign In">
+
+Open your browser and navigate to:
+
+```
+http://localhost:5173
+```
+
+You'll be redirected to the login page. Click **"Continue with Google"** to create a simulated local account.
+
+<Note>
+In development mode, the "Continue with Google" button creates a mock account using Firebase Auth emulator. No actual Google account is required.
+</Note>
+
+After signing in, you'll land on the **Today** view - your focused workspace for current tasks.
+
+</Step>
+
+<Step title="Create Your First Task">
+
+Let's create your first task:
+
+1. Click the **"+ New Task"** button (floating action button on mobile, or in the top right on desktop)
+2. In the task modal, enter:
+   - **Title**: "Complete Arre quickstart guide"
+   - **Notes**: Optional details about the task
+   - **Date**: Select "Today"
+   - **Energy Level**: Choose "🟢 Low Energy" for this simple task
+3. Click **"Create Task"**
+
+<CodeGroup>
+
+```typescript Task Creation Flow
+// When you create a task, Arre saves it to Firestore
+interface Task {
+  title: string;
+  notes?: string;
+  date: 'today' | 'upcoming' | 'anytime' | 'someday';
+  energyLevel: 'low' | 'neutral' | 'high';
+  projectId?: string;
+  completed: boolean;
+  createdAt: Timestamp;
+  userId: string;
+}
+```
+
+```typescript Real-time Sync
+// Tasks sync instantly across all views
+// Powered by Firestore onSnapshot listeners
+const unsubscribe = onSnapshot(
+  collection(db, 'tasks'),
+  (snapshot) => {
+    const tasks = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    updateTasksState(tasks);
+  }
+);
+```
+
+</CodeGroup>
+
+**Success!** Your first task now appears in the Today view with:
+- ✅ A checkbox to mark it complete
+- 🟢 A green dot indicating low energy
+- ✏️ Edit and delete options on hover
+
+</Step>
+
+<Step title="Explore Key Features">
+
+Now that you have a task, explore Arre's key features:
+
+<Accordion title="Try the Energy Filter">
+Click the energy filter buttons at the top:
+- **🟢 Low Energy**: Shows quick wins and administrative tasks
+- **🟡 Neutral**: All tasks (default)
+- **🟣 High Focus**: Deep work sessions only
+
+Your task should appear when "Low Energy" or "Neutral" is selected.
+</Accordion>
+
+<Accordion title="Check Productivity Metrics">
+Navigate to **Work Area** (Inbox) from the sidebar to see:
+- **Velocity Chart**: Your completion rate (empty for now)
+- **Focus Ring**: Time spent in deep work
+- **Task Progress**: Daily throughput visualization
+
+These populate as you complete tasks over time.
+</Accordion>
+
+<Accordion title="Create a Project">
+1. Click **"+ New Project"** in the sidebar
+2. Choose a color (e.g., Emerald)
+3. Name it "Personal"
+4. Edit your task and assign it to this project
+5. Notice the colored dot badge on the task
+</Accordion>
+
+<Accordion title="Test Dark Mode">
+Click the theme toggle (sun/moon icon) to switch between light and dark modes. Notice the high-performance dark theme with neon cyan and purple accents.
+</Accordion>
+
+</Step>
+
+</Steps>
+
+## What's Next?
+
+Congratulations! You've successfully:
+- ✅ Set up Arre locally with Firebase emulators
+- ✅ Created your first task
+- ✅ Explored energy filtering and themes
+
+### Continue Learning
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Learn about production deployment, environment variables, and Firebase configuration
+  </Card>
+  
+  <Card title="Core Features" icon="sparkles" href="/features">
+    Deep dive into Magic Import, productivity metrics, and project management
+  </Card>
+  
+  <Card title="Testing" icon="flask" href="/testing">
+    Set up Playwright E2E tests and understand the AI QA Agent
+  </Card>
+  
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Explore the backend architecture, Firestore schema, and security rules
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+<Accordion title="Port Already in Use">
+If you see `Port 5173 is already in use`, kill the existing process:
+
+```bash
+# Find the process
+lsof -ti:5173
+
+# Kill it
+kill -9 $(lsof -ti:5173)
+
+# Restart dev server
+npm run dev
+```
+</Accordion>
+
+<Accordion title="Emulator Connection Failed">
+Ensure emulators are running in a separate terminal window:
+
+```bash
+# Check if emulators are running
+curl http://localhost:9099
+
+# If not, start them
+npm run emulators
+```
+</Accordion>
+
+<Accordion title="Tasks Not Appearing">
+Check the browser console for connection errors. The app should log:
+```
+🔥 Connecting to Firebase Emulators...
+```
+
+If missing, verify that `import.meta.env.DEV` is true and emulators are running.
+</Accordion>
+
+## Development Tips
+
+<Note>
+**Pro Tip**: Open the Emulator UI at `http://localhost:4000` to inspect your Firestore data, view authentication users, and monitor cloud function calls in real-time.
+</Note>
+
+<Warning>
+**Data Persistence**: Emulator data is ephemeral by default. When you restart emulators, all data resets. For persistent data, add the `--import` and `--export-on-exit` flags to your emulator command.
+</Warning>
+
+---
+
+Ready for production deployment? Check out the [Installation Guide](/installation) for Firebase Hosting setup and CI/CD configuration.

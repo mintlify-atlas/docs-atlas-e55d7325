@@ -1,0 +1,165 @@
+---
+title: 'Task Management'
+description: 'Create, organize, and complete your tasks with powerful features designed for clarity and speed'
+icon: 'check-circle'
+---
+
+## Overview
+
+Arre makes task management effortless with a clean interface and intelligent features. Every task can be customized with dates, energy levels, projects, and detailed notes to help you stay organized.
+
+## Creating Tasks
+
+There are two ways to create tasks in Arre:
+
+<Tabs>
+  <Tab title="Manual Entry">
+    Click the **New Task** button or press `Cmd+K` to open the task editor. Fill in the details:
+
+    - **Title**: What needs to be done? (required)
+    - **Notes**: Add details, subtasks, or context
+    - **Date**: Schedule it for a specific day
+    - **Project**: Assign to an existing project
+    - **Energy Level**: Low, Neutral, or High
+    - **Someday**: Check this to move tasks to your Someday list
+
+    <Note>
+      The task editor opens on the **Magic Import** tab by default when creating new tasks, and switches to **Manual** mode when editing existing tasks.
+    </Note>
+  </Tab>
+
+  <Tab title="Magic Import">
+    Upload a PDF or CSV file and let AI extract tasks automatically. See [Magic Import](/features/ai-import) for details.
+  </Tab>
+</Tabs>
+
+## Task Properties
+
+Every task in Arre has the following properties:
+
+### Title
+The main description of your task. Keep it clear and actionable.
+
+**Example**: "Review Q3 report" instead of "The report needs reviewing"
+
+### Notes
+Add additional context, subtasks, or links. Notes appear below the task title and help you remember important details when you return to a task later.
+
+**Reference**: `TaskEditorModal.tsx:187-193`
+
+### Date
+Schedule tasks for specific days. Tasks with dates appear in:
+- **Today**: Tasks scheduled for today
+- **Upcoming**: Future scheduled tasks
+- **Anytime**: Undated tasks you can work on anytime
+
+<Warning>
+  When you check **Someday**, the date field is disabled. Someday tasks are ideas you might want to do eventually, without a specific timeframe.
+</Warning>
+
+### Evening Flag
+Mark tasks specifically for the evening. These appear in a separate "This Evening" section on the Today page, helping you separate daytime and evening work.
+
+**Reference**: `task.ts:10`
+
+### Energy Level
+Assign one of three energy levels to match tasks to your current state:
+
+- **Low Energy**: Simple, routine tasks that don't require much focus
+- **Neutral**: Standard tasks with moderate complexity
+- **High Focus**: Deep work requiring concentration and mental clarity
+
+Use [Energy Filtering](/features/energy-filtering) to view only tasks matching your current energy level.
+
+**Reference**: `TaskEditorModal.tsx:249-263`
+
+### Tags
+Organize tasks with tags like `work`, `personal`, `errand`, or `urgent`. Tags appear as small badges next to your tasks.
+
+**Available tags**: work, personal, errand, urgent
+
+**Reference**: `task.ts:2, TaskItem.tsx:84-86`
+
+### Project Assignment
+Link tasks to projects for better organization. Tasks assigned to projects are grouped together in Anytime and Someday views.
+
+**Reference**: `TaskEditorModal.tsx:221-248`
+
+## Editing Tasks
+
+To edit a task:
+
+1. Click the **Edit** button (pencil icon) on any task
+2. Make your changes in the modal
+3. Click **Save Changes**
+
+The task editor pre-fills with all existing data and opens in Manual mode.
+
+**Reference**: `TaskItem.tsx:33-36`
+
+## Completing Tasks
+
+Click the circle checkbox next to any task to mark it complete. Completed tasks:
+- Show a checkmark and strike-through styling
+- Count toward your [productivity metrics](/features/productivity-metrics)
+- Move to your Logbook for historical tracking
+
+Click again to mark incomplete if needed.
+
+**Reference**: `TaskItem.tsx:50-62`
+
+## Deleting Tasks
+
+To delete a task:
+
+1. Click the **Delete** button (trash icon)
+2. Confirm the deletion
+
+<Warning>
+  Deletion is permanent and cannot be undone. Make sure you really want to remove the task before confirming.
+</Warning>
+
+**Reference**: `TaskItem.tsx:26-31`
+
+## Tips for Effective Task Management
+
+<CardGroup cols={2}>
+  <Card title="Use Energy Levels Strategically" icon="bolt">
+    Assign energy levels when creating tasks, then filter by your current state to see only what you can handle right now.
+  </Card>
+
+  <Card title="Keep Titles Action-Oriented" icon="pen">
+    Start with verbs: "Draft proposal", "Call client", "Review code". This makes tasks feel more concrete and achievable.
+  </Card>
+
+  <Card title="Use Projects for Grouping" icon="folder">
+    Related tasks become easier to manage when grouped under projects. See them together in Anytime and Someday views.
+  </Card>
+
+  <Card title="Notes for Context" icon="note">
+    Add links, requirements, or subtasks in notes. Future-you will appreciate the extra context.
+  </Card>
+</CardGroup>
+
+## Keyboard Shortcuts
+
+- `Cmd+K` or `Ctrl+K`: Open new task modal
+- `Enter`: Save task (when in title field)
+- `Esc`: Close task modal
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Projects" icon="folder" href="/features/projects">
+    Organize tasks into color-coded projects
+  </Card>
+  <Card title="Magic Import" icon="sparkles" href="/features/ai-import">
+    Generate tasks from documents automatically
+  </Card>
+  <Card title="Energy Filtering" icon="zap" href="/features/energy-filtering">
+    Filter tasks by your current energy level
+  </Card>
+  <Card title="Productivity Metrics" icon="chart-line" href="/features/productivity-metrics">
+    Track your completion rates and trends
+  </Card>
+</CardGroup>

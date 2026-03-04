@@ -1,0 +1,571 @@
+---
+title: Installation
+description: Complete installation guide for Arre, including prerequisites, local development setup with Firebase emulators, and production deployment.
+---
+
+# Installation
+
+This guide covers everything you need to install and deploy Arre, from local development to production hosting. Whether you're setting up for the first time or deploying to Firebase Hosting, we've got you covered.
+
+## Prerequisites
+
+Before installing Arre, ensure you have the following:
+
+### Required Software
+
+<CardGroup cols={2}>
+  <Card title="Node.js 22.12+" icon="node-js">
+    Download from [nodejs.org](https://nodejs.org). Verify with `node --version`
+  </Card>
+  
+  <Card title="npm Package Manager" icon="box">
+    Comes with Node.js. Verify with `npm --version`
+  </Card>
+  
+  <Card title="Git" icon="code-branch">
+    Version control system. Verify with `git --version`
+  </Card>
+  
+  <Card title="Firebase CLI (Production)" icon="fire">
+    Install with `npm install -g firebase-tools`
+  </Card>
+</CardGroup>
+
+### Firebase Account (Production Only)
+
+For production deployment, you'll need:
+- A [Firebase](https://firebase.google.com) account
+- A Firebase project with Spark plan (free) or Blaze plan (pay-as-you-go)
+- Enabled services: Authentication, Firestore, Functions, Storage, Hosting
+
+<Note>
+For local development, you **don't need** a Firebase account. The Firebase emulators run entirely offline.
+</Note>
+
+## Local Development Setup
+
+Get Arre running on your machine with Firebase emulators for a complete local development environment.
+
+<Steps>
+
+<Step title="Clone the Repository">
+
+```bash
+git clone https://github.com/pedro3087/arre.git
+cd arre
+```
+
+<Info>
+Replace `pedro3087` with your GitHub username if you've forked the repository.
+</Info>
+
+</Step>
+
+<Step title="Install Dependencies">
+
+Install all Node.js packages:
+
+```bash
+npm install
+```
+
+This installs:
+
+| Package | Purpose |
+|---------|---------|
+| `react@19.2.4` | UI framework |
+| `firebase@12.9.0` | Backend SDK |
+| `vite@7.3.1` | Build tool |
+| `typescript@5.9.3` | Type safety |
+| `framer-motion@12.34.0` | Animations |
+| `recharts@3.7.0` | Charts |
+| `lucide-react@0.564.0` | Icons |
+| `playwright@1.58.2` | E2E testing |
+| `firebase-tools@15.6.0` | Emulators & deployment |
+
+</Step>
+
+<Step title="Configure Environment Variables (Optional)">
+
+For local development, environment variables are **optional** because the app uses Firebase emulators. However, you can create a `.env` file for consistency:
+
+```bash
+# .env (optional for local development)
+VITE_FIREBASE_API_KEY=demo-api-key
+VITE_FIREBASE_AUTH_DOMAIN=demo-auth-domain
+VITE_FIREBASE_PROJECT_ID=demo-project-id
+VITE_FIREBASE_STORAGE_BUCKET=demo-storage-bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=demo-app-id
+```
+
+<CodeGroup>
+
+```typescript firebase.ts
+// Arre automatically uses emulators in development
+import { initializeApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+// Connect to emulators in development
+if (import.meta.env.DEV) {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
+}
+```
+
+```json firebase.json
+{
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "functions": {
+      "port": 5001
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+<Warning>
+Never commit real Firebase credentials to version control. Add `.env` to your `.gitignore` file.
+</Warning>
+
+</Step>
+
+<Step title="Start Firebase Emulators">
+
+Open a dedicated terminal window for emulators:
+
+```bash
+npm run emulators
+```
+
+This starts four local services:
+
+| Emulator | Port | Purpose |
+|----------|------|---------|
+| **Auth** | 9099 | Mock user authentication |
+| **Firestore** | 8080 | Local database |
+| **Functions** | 5001 | Cloud functions for AI import |
+| **Storage** | 9199 | File uploads (PDFs, CSVs) |
+
+**Emulator UI**: Access at `http://localhost:4000` to inspect data, view users, and monitor function calls.
+
+<Note>
+Keep this terminal open! Closing it will stop all backend services.
+</Note>
+
+</Step>
+
+<Step title="Start Development Server">
+
+In a new terminal, start Vite:
+
+```bash
+npm run dev
+```
+
+The app starts at `http://localhost:5173` with:
+- ⚡ Hot module replacement (instant updates)
+- 🔥 Firebase emulator connections
+- 🎨 Full theme system (light/dark)
+- 📊 Real-time Firestore sync
+
+</Step>
+
+<Step title="Verify Installation">
+
+Open `http://localhost:5173` in your browser. You should see:
+
+1. **Redirect to Login**: Automatic navigation to `/login`
+2. **Google Sign-In**: Click "Continue with Google"
+3. **Mock Account Creation**: Instant simulated authentication
+4. **Today View**: Landing page with empty task list
+
+✅ **Success!** Your local development environment is ready.
+
+</Step>
+
+</Steps>
+
+## Production Deployment
+
+Deploy Arre to Firebase Hosting for a production-ready, globally distributed application.
+
+<Warning>
+Production deployment requires a Firebase project on the Blaze plan (pay-as-you-go) because Cloud Functions are used for AI Magic Import.
+</Warning>
+
+<Steps>
+
+<Step title="Create Firebase Project">
+
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Click **"Add project"**
+3. Enter project name (e.g., `arre-prod`)
+4. Enable Google Analytics (optional)
+5. Create project
+
+</Step>
+
+<Step title="Enable Firebase Services">
+
+In your Firebase project, enable:
+
+<Accordion title="Authentication">
+1. Go to **Authentication** → **Sign-in method**
+2. Enable **Google** provider
+3. Add authorized domains (your production domain)
+</Accordion>
+
+<Accordion title="Firestore Database">
+1. Go to **Firestore Database** → **Create database**
+2. Start in **production mode**
+3. Choose a location (e.g., `us-central1`)
+4. Deploy security rules from `firestore.rules`
+</Accordion>
+
+<Accordion title="Storage">
+1. Go to **Storage** → **Get started**
+2. Use default settings
+3. Deploy rules from `storage.rules`
+</Accordion>
+
+<Accordion title="Cloud Functions">
+1. Upgrade to **Blaze plan** (required)
+2. Enable **Cloud Functions API**
+3. Set up **Secret Manager** for `GEMINI_API_KEY`
+</Accordion>
+
+</Step>
+
+<Step title="Configure Firebase CLI">
+
+Login and initialize Firebase:
+
+```bash
+# Login to Firebase
+firebase login
+
+# Initialize project
+firebase init
+```
+
+Select the following features:
+- ✅ Firestore
+- ✅ Functions
+- ✅ Hosting
+- ✅ Storage
+- ✅ Emulators
+
+<CodeGroup>
+
+```bash Firestore Setup
+# Use existing rules
+? What file should be used for Firestore Rules? firestore.rules
+? File firestore.rules already exists. Do you want to overwrite it? No
+```
+
+```bash Functions Setup
+? What language would you like to use? TypeScript
+? Do you want to use ESLint? Yes
+? Do you want to install dependencies now? Yes
+```
+
+```bash Hosting Setup
+? What do you want to use as your public directory? dist
+? Configure as a single-page app? Yes
+? Set up automatic builds and deploys with GitHub? Yes (optional)
+```
+
+</CodeGroup>
+
+</Step>
+
+<Step title="Set Environment Variables">
+
+Create a production `.env` file with your Firebase project credentials:
+
+```bash
+# .env.production
+VITE_FIREBASE_API_KEY=your_production_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+Get these values from:
+**Firebase Console** → **Project Settings** → **Your apps** → **Web app**
+
+<Info>
+Add `.env.production` to `.gitignore` to keep credentials secure.
+</Info>
+
+</Step>
+
+<Step title="Configure Gemini API Key">
+
+For AI Magic Import, set up the Gemini API key in Firebase Secret Manager:
+
+```bash
+# Add secret to Firebase
+firebase functions:secrets:set GEMINI_API_KEY
+
+# Enter your Gemini API key when prompted
+```
+
+Get your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+
+</Step>
+
+<Step title="Build for Production">
+
+Build the optimized production bundle:
+
+```bash
+npm run build
+```
+
+This creates a `dist/` directory with:
+- Minified JavaScript bundles
+- Optimized CSS
+- Code splitting for faster loads
+- Source maps for debugging
+
+**Expected output:**
+```
+vite v7.3.1 building for production...
+✓ 234 modules transformed.
+dist/index.html                   0.45 kB │ gzip:  0.30 kB
+dist/assets/index-a1b2c3d4.css   23.45 kB │ gzip: 12.34 kB
+dist/assets/index-e5f6g7h8.js   234.56 kB │ gzip: 89.12 kB
+✓ built in 3.45s
+```
+
+</Step>
+
+<Step title="Deploy to Firebase">
+
+Deploy all services to production:
+
+```bash
+# Deploy everything
+firebase deploy
+
+# Or deploy specific services
+firebase deploy --only hosting
+firebase deploy --only firestore:rules
+firebase deploy --only functions
+```
+
+**Expected output:**
+```
+=== Deploying to 'your-project-id'...
+
+i  deploying firestore, functions, hosting, storage
+✔  firestore: rules updated
+✔  functions: deployed analyzeDocument
+✔  hosting: deployed successfully
+✔  storage: rules updated
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/your-project-id
+Hosting URL: https://your-project-id.web.app
+```
+
+<Note>
+Your production app is now live at `https://your-project-id.web.app`!
+</Note>
+
+</Step>
+
+</Steps>
+
+## Post-Installation Setup
+
+After deploying to production, complete these steps:
+
+### Security Rules
+
+Verify your Firestore and Storage rules are deployed correctly:
+
+<CodeGroup>
+
+```javascript firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own tasks
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+    }
+    
+    // Users can only access their own projects
+    match /projects/{projectId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+    }
+  }
+}
+```
+
+```javascript storage.rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Users can only upload to their own folders
+    match /uploads/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+### Analytics and Monitoring
+
+Set up monitoring for production:
+
+1. **Firebase Performance**: Track app performance metrics
+2. **Crashlytics**: Monitor errors and crashes
+3. **Google Analytics**: Track user engagement (if enabled)
+
+### CI/CD Pipeline (Optional)
+
+Arre includes a GitHub Actions workflow for automated deployments:
+
+```yaml .github/workflows/deploy.yml
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: live
+```
+
+See the [CI/CD Pipeline documentation](./docs/CI_CD_PIPELINE.md) in the source repository for details on the AI QA Agent integration.
+
+## Development Commands
+
+Reference for all available npm scripts:
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite development server (port 5173) |
+| `npm run build` | Build production bundle to `dist/` |
+| `npm run preview` | Preview production build locally |
+| `npm run emulators` | Start Firebase emulators |
+| `npm run test` | Run Playwright E2E tests |
+| `npm run test:ui` | Run tests with Playwright UI |
+
+## Troubleshooting
+
+<Accordion title="Build Fails with TypeScript Errors">
+Ensure you're using TypeScript 5.9.3:
+
+```bash
+npm install typescript@5.9.3 --save-dev
+npm run build
+```
+</Accordion>
+
+<Accordion title="Firebase Deploy Fails">
+Check that you're logged in and have the correct project selected:
+
+```bash
+firebase login
+firebase use --add
+firebase projects:list
+```
+</Accordion>
+
+<Accordion title="Functions Deploy Fails">
+Ensure you're on the Blaze plan and have set the Gemini API key:
+
+```bash
+firebase projects:list
+firebase functions:secrets:access GEMINI_API_KEY
+```
+</Accordion>
+
+<Accordion title="Emulator Data Not Persisting">
+Export and import emulator data between sessions:
+
+```bash
+# Export on exit
+firebase emulators:start --export-on-exit=./emulator-data
+
+# Import on start
+firebase emulators:start --import=./emulator-data
+```
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Architecture" icon="database" href="/architecture">
+    Learn about Firestore schema, security rules, and Cloud Functions
+  </Card>
+  
+  <Card title="Testing Guide" icon="flask" href="/testing">
+    Set up Playwright tests and understand the AI QA Agent
+  </Card>
+  
+  <Card title="Features" icon="sparkles" href="/features">
+    Deep dive into Magic Import, metrics, and project management
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api">
+    Explore the Firebase functions API and frontend hooks
+  </Card>
+</CardGroup>
+
+---
+
+Need help? Check out the [GitHub Issues](https://github.com/pedro3087/arre/issues) or contribute to the project!

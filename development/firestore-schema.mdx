@@ -1,0 +1,297 @@
+---
+title: 'Firestore Schema'
+description: 'Database structure, collections, and TypeScript interfaces'
+---
+
+## Overview
+
+Arre uses Cloud Firestore as its primary database. Data is organized by user, with each user having their own sub-collections for tasks, projects, and integrations.
+
+## Data Structure
+
+The database follows a hierarchical structure with user isolation:
+
+```
+/users/{userId}
+  ├── /tasks/{taskId}
+  ├── /projects/{projectId}
+  └── /integrations/{integrationId}
+```
+
+<Note>
+  All user data is isolated under `/users/{userId}` to ensure proper access control via security rules.
+</Note>
+
+## Collections
+
+### Tasks Collection
+
+The tasks collection stores all user task data with status tracking, scheduling, and project associations.
+
+#### TaskDocument Interface
+
+Defined in `src/lib/types/firestore.ts`:
+
+```typescript src/lib/types/firestore.ts
+import { Timestamp } from 'firebase/firestore';
+import { TaskStatus } from '../../shared/types/task';
+
+export interface TaskDocument {
+  id: string;              // Document ID
+  title: string;           // Task title (required)
+  notes?: string;          // Optional task notes/description
+  status: TaskStatus;      // 'todo' | 'completed' | 'canceled' | 'someday'
+  date?: string;           // YYYY-MM-DD string for scheduled date
+  isEvening?: boolean;     // Flag for "This Evening" feature
+  energy?: 'low' | 'neutral' | 'high';  // Energy level estimate
+  tags?: string[];         // Array of tag strings
+  projectId?: string;      // Reference to associated project
+  createdAt: Timestamp;    // Firestore server timestamp
+  completedAt?: Timestamp; // Timestamp when task was completed
+  updatedAt: Timestamp;    // Last modification timestamp
+}
+```
+
+#### Field Details
+
+<ParamField path="id" type="string" required>
+  Unique document identifier. Matches the Firestore document ID.
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  Task title. Must be non-empty string (validated by security rules).
+</ParamField>
+
+<ParamField path="notes" type="string">
+  Additional task description or notes. Supports markdown formatting in the UI.
+</ParamField>
+
+<ParamField path="status" type="TaskStatus" required>
+  Current task status. Must be one of: `'todo'`, `'completed'`, `'canceled'`, `'someday'`
+</ParamField>
+
+<ParamField path="date" type="string">
+  Scheduled date in `YYYY-MM-DD` format. Used for daily planning and filtering.
+</ParamField>
+
+<ParamField path="isEvening" type="boolean">
+  Marks task for "This Evening" planning feature. Used in conjunction with `date`.
+</ParamField>
+
+<ParamField path="energy" type="'low' | 'neutral' | 'high'">
+  Estimated energy level required for the task. Used for smart scheduling.
+</ParamField>
+
+<ParamField path="tags" type="string[]">
+  Array of tag strings for categorization. Frontend suggests common tags.
+</ParamField>
+
+<ParamField path="projectId" type="string">
+  Foreign key reference to a project document ID. Must exist in user's projects collection.
+</ParamField>
+
+<ParamField path="createdAt" type="Timestamp" required>
+  Firestore server timestamp set on document creation.
+</ParamField>
+
+<ParamField path="completedAt" type="Timestamp">
+  Timestamp when task status changed to `'completed'`. Used for analytics.
+</ParamField>
+
+<ParamField path="updatedAt" type="Timestamp" required>
+  Firestore server timestamp updated on every document modification.
+</ParamField>
+
+#### TaskStatus Type
+
+```typescript src/shared/types/task.ts
+export type TaskStatus = 'todo' | 'completed' | 'canceled' | 'someday';
+```
+
+### Projects Collection
+
+Projects organize tasks into categories with visual color coding.
+
+#### ProjectDocument Interface
+
+```typescript src/lib/types/firestore.ts
+export interface ProjectDocument {
+  id: string;      // Document ID
+  title: string;   // Project name (required)
+  color: string;   // Hex color code or color name
+  order: number;   // Display order in UI
+}
+```
+
+#### Field Details
+
+<ParamField path="id" type="string" required>
+  Unique project identifier matching the Firestore document ID.
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  Project name. Must be non-empty (validated by security rules).
+</ParamField>
+
+<ParamField path="color" type="string" required>
+  Color identifier. Can be a hex code (`#10b981`) or color name from the predefined palette.
+</ParamField>
+
+<ParamField path="order" type="number" required>
+  Numeric ordering for display. Lower numbers appear first in the UI.
+</ParamField>
+
+#### Available Project Colors
+
+```typescript src/shared/types/task.ts
+export const PROJECT_COLORS = [
+  { name: 'emerald', hex: '#10b981', label: 'Emerald' },
+  { name: 'sapphire', hex: '#2563eb', label: 'Sapphire' },
+  { name: 'ruby', hex: '#dc2626', label: 'Ruby' },
+  { name: 'lavender', hex: '#7c3aed', label: 'Lavender' },
+  { name: 'gold', hex: '#f59e0b', label: 'Gold' },
+  { name: 'cyan', hex: '#06b6d4', label: 'Cyan' },
+  { name: 'rose', hex: '#f43f5e', label: 'Rose' },
+  { name: 'amber', hex: '#d97706', label: 'Amber' },
+  { name: 'teal', hex: '#14b8a6', label: 'Teal' },
+  { name: 'indigo', hex: '#6366f1', label: 'Indigo' },
+] as const;
+```
+
+### Integrations Collection
+
+Stores OAuth tokens and configuration for third-party integrations (e.g., Google Tasks).
+
+<Warning>
+  This collection contains sensitive data. Access is strictly limited to the authenticated user via security rules.
+</Warning>
+
+## Timestamp Handling
+
+### Firestore Timestamps vs. ISO Strings
+
+Arre uses different timestamp formats depending on the context:
+
+<Tabs>
+  <Tab title="Firestore (Database)">
+    Uses Firestore `Timestamp` objects for precise datetime storage:
+
+    ```typescript
+    import { Timestamp, serverTimestamp } from 'firebase/firestore';
+
+    const taskData = {
+      title: 'New Task',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    ```
+  </Tab>
+  <Tab title="Application (Client)">
+    Uses ISO 8601 strings for date handling in the UI:
+
+    ```typescript
+    export interface Task {
+      date?: string;        // YYYY-MM-DD
+      createdAt: string;    // ISO 8601 string
+      updatedAt?: string;
+      completedAt?: string;
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Converting Between Formats
+
+```typescript
+// Firestore Timestamp → ISO String
+const isoString = timestamp.toDate().toISOString();
+
+// ISO String → Firestore Timestamp
+const timestamp = Timestamp.fromDate(new Date(isoString));
+
+// Current server timestamp (preferred for writes)
+import { serverTimestamp } from 'firebase/firestore';
+const now = serverTimestamp();
+```
+
+<Note>
+  Always use `serverTimestamp()` when writing timestamps to Firestore to ensure consistency across different client time zones.
+</Note>
+
+## Query Examples
+
+### Fetch User's Tasks
+
+```typescript
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
+
+const userId = auth.currentUser?.uid;
+const tasksRef = collection(db, 'users', userId, 'tasks');
+
+// Get all active tasks
+const q = query(tasksRef, where('status', '==', 'todo'));
+const snapshot = await getDocs(q);
+const tasks = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+```
+
+### Create a New Task
+
+```typescript
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+const tasksRef = collection(db, 'users', userId, 'tasks');
+
+const newTask = await addDoc(tasksRef, {
+  title: 'Complete documentation',
+  status: 'todo',
+  date: '2026-03-05',
+  energy: 'neutral',
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp()
+});
+
+console.log('Task created:', newTask.id);
+```
+
+### Update Task Status
+
+```typescript
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+
+const taskRef = doc(db, 'users', userId, 'tasks', taskId);
+
+await updateDoc(taskRef, {
+  status: 'completed',
+  completedAt: serverTimestamp(),
+  updatedAt: serverTimestamp()
+});
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Use Server Timestamps">
+    Always use `serverTimestamp()` for `createdAt` and `updatedAt` fields to avoid client clock skew.
+  </Step>
+  <Step title="Validate Before Writing">
+    Ensure all required fields are present before writing to Firestore. Security rules will reject invalid documents.
+  </Step>
+  <Step title="Handle Subcollection References">
+    When referencing projects via `projectId`, verify the project exists in the user's projects collection.
+  </Step>
+  <Step title="Clean Up Orphaned Data">
+    When deleting a project, either update or delete associated tasks to maintain referential integrity.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Cloud Functions" icon="bolt" href="/development/cloud-functions">
+    Learn how functions interact with Firestore
+  </Card>
+  <Card title="Security Rules" icon="shield" href="/development/security-rules">
+    Understand how schema is enforced
+  </Card>
+</CardGroup>

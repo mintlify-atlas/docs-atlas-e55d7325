@@ -1,0 +1,247 @@
+---
+title: 'Energy Filtering'
+description: 'Match tasks to your current energy level with intelligent filtering'
+icon: 'zap'
+---
+
+## Overview
+
+Energy filtering helps you see only the tasks that match your current mental state. Instead of fighting through your entire task list when you're tired, filter for "Low Energy" tasks and tackle what you can actually handle right now.
+
+## Energy Levels Explained
+
+Arre uses three energy levels to categorize tasks:
+
+### Low Energy
+
+Simple, routine tasks that don't require much mental effort:
+
+- Responding to straightforward emails
+- Filing documents
+- Updating spreadsheets with existing data
+- Scheduling appointments
+- Light administrative work
+
+**When to use**: After lunch dips, end of workday, or when you're tired but still want to be productive.
+
+### Neutral
+
+Standard tasks with moderate complexity:
+
+- Attending meetings
+- Reviewing documents
+- Writing routine reports
+- Making phone calls
+- Most day-to-day work
+
+**When to use**: Normal working hours when you're neither particularly energized nor drained.
+
+### High Focus
+
+Deep work requiring concentration and mental clarity:
+
+- Writing proposals or presentations
+- Complex problem-solving
+- Code reviews or development
+- Strategic planning
+- Creative work
+- Learning new concepts
+
+**When to use**: Your peak mental hours - often morning for most people, but identify your own prime time.
+
+**Reference**: `task.ts:11, EnergyFilter.tsx:18-34`
+
+## Using the Energy Filter
+
+The energy filter appears on your Dashboard (Inbox) page.
+
+<Steps>
+  <Step title="Assess Your Current State">
+    Check in with yourself: How much mental energy do you have right now?
+  </Step>
+
+  <Step title="Select a Filter">
+    Click one of the three energy pills:
+    - **Low Energy** (orange indicator)
+    - **Neutral** (gray indicator)
+    - **High Focus** (purple indicator)
+
+    **Reference**: `EnergyFilter.tsx:17-34`
+  </Step>
+
+  <Step title="View Filtered Tasks">
+    The task list instantly updates to show only tasks matching that energy level.
+  </Step>
+
+  <Step title="Clear Filter">
+    Click the **Clear** button to return to viewing all tasks.
+
+    **Reference**: `EnergyFilter.tsx:35-37`
+  </Step>
+</Steps>
+
+## Visual Indicators
+
+Each energy level has a distinct color:
+
+- **Low Energy**: Orange/amber dot
+- **Neutral**: Gray dot
+- **High Focus**: Purple dot
+
+The selected filter pill becomes active with enhanced styling and the colored dot becomes more prominent.
+
+**Reference**: `EnergyFilter.tsx:54-66`
+
+<Note>
+  The energy filter uses smooth animations powered by Framer Motion, making the transition between filters feel natural and responsive.
+</Note>
+
+## Assigning Energy Levels to Tasks
+
+When creating or editing a task:
+
+1. Find the **Energy Level** section in the task editor
+2. Click one of the three pills: Low, Neutral, or High
+3. The selected energy level is highlighted
+
+All tasks default to "Neutral" if you don't explicitly set an energy level.
+
+**Reference**: `TaskEditorModal.tsx:249-263`
+
+## How to Choose Energy Levels
+
+<Tabs>
+  <Tab title="Think About Effort">
+    How much mental effort will this task require?
+
+    - **Low**: Can do it almost on autopilot
+    - **Neutral**: Need to pay attention but it's routine
+    - **High**: Need to be fully present and focused
+  </Tab>
+
+  <Tab title="Consider Consequences">
+    What happens if you make a mistake?
+
+    - **Low**: Minor, easily corrected
+    - **Neutral**: Noticeable but not critical
+    - **High**: Significant impact, hard to undo
+  </Tab>
+
+  <Tab title="Assess Creativity Required">
+    How much original thinking is needed?
+
+    - **Low**: Following established procedures
+    - **Neutral**: Some judgment calls
+    - **High**: Inventing solutions or new approaches
+  </Tab>
+</Tabs>
+
+## Matching Work to Your Energy
+
+The power of energy filtering comes from aligning tasks with your current capacity:
+
+<CardGroup cols={2}>
+  <Card title="Morning: High Focus" icon="sunrise">
+    Use your peak mental hours for challenging, important work. Filter for High Focus tasks and tackle your most demanding projects.
+  </Card>
+
+  <Card title="Midday: Neutral" icon="sun">
+    Standard working hours are good for meetings, routine work, and moderate tasks. Neutral filter shows your day-to-day workload.
+  </Card>
+
+  <Card title="Afternoon: Low Energy" icon="cloud">
+    Post-lunch slump? Filter for Low Energy tasks. You'll still be productive without forcing deep work when you don't have the capacity.
+  </Card>
+
+  <Card title="Evening: Low or High" icon="moon">
+    Some people get a second wind in the evening. Know yourself - are you an evening deep worker or should you stick to easy tasks?
+  </Card>
+</CardGroup>
+
+## Benefits of Energy Filtering
+
+### Reduces Decision Fatigue
+
+When you're tired, deciding what to work on next is exhausting. Energy filtering eliminates options that aren't suitable for your current state.
+
+### Increases Completion Rates
+
+You're more likely to finish tasks when they match your energy level. This builds momentum and confidence.
+
+### Prevents Burnout
+
+By not forcing high-focus work when you're depleted, you protect yourself from mental exhaustion and maintain sustainable productivity.
+
+### Maximizes High-Energy Periods
+
+Filtering helps you identify and prioritize deep work during your peak hours instead of wasting them on trivial tasks.
+
+## Common Patterns
+
+<Accordion title="Mostly neutral tasks">
+  If most of your tasks are neutral, you might not be differentiating enough. Push yourself to identify truly easy tasks (Low) and genuinely challenging work (High). This makes filtering more valuable.
+</Accordion>
+
+<Accordion title="Too many high-focus tasks">
+  If everything is marked High, either:
+  - You're being too hard on yourself (most tasks are actually Neutral)
+  - You need to delegate or eliminate some work
+  - You're overcommitted and should reduce your workload
+
+  Remember: Most people can only do 3-4 hours of genuine deep work per day.
+</Accordion>
+
+<Accordion title="Avoiding high-focus tasks">
+  If you find yourself always filtering to Low or Neutral, you might be procrastinating on important work. Schedule protected time for High Focus tasks when you know you'll have the energy.
+</Accordion>
+
+<Accordion title="Energy levels change over time">
+  A task that was High Focus when you first learned the skill might become Neutral or even Low as you gain expertise. Update energy levels periodically as your abilities grow.
+</Accordion>
+
+## Tips for Success
+
+### Be Honest
+
+Don't mark tasks as Low Energy just because you want to avoid them. Accurate energy levels make filtering actually useful.
+
+### Track Your Energy Patterns
+
+Notice when you naturally have high focus time. Most people have 2-4 hour windows of peak mental clarity. Schedule your High Focus tasks during these windows.
+
+### Batch Similar Energy Levels
+
+Consider grouping Low Energy tasks together (e.g., "admin hour" every afternoon) to maximize your high-energy time for important work.
+
+### Review and Adjust
+
+Your energy patterns might change with seasons, sleep quality, or life circumstances. What's Low Energy in one phase of life might be High Focus in another.
+
+## Integration with Other Features
+
+### Productivity Metrics
+
+The [Daily Focus metric](/features/productivity-metrics) specifically tracks High Focus task completions, encouraging you to protect time for deep work.
+
+**Reference**: `DashboardStats.tsx:48-75`
+
+### Projects
+
+You can combine project grouping with energy filtering. For example, see only High Focus tasks within your "Work" project.
+
+### Task Management
+
+Energy levels are a core task property, stored alongside title, date, and project assignment.
+
+**Reference**: `task.ts:4-17`
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Task Management" icon="check-circle" href="/features/task-management">
+    Learn how to assign energy levels when creating tasks
+  </Card>
+  <Card title="Productivity Metrics" icon="chart-line" href="/features/productivity-metrics">
+    Track your high-focus task completion rate
+  </Card>
+</CardGroup>

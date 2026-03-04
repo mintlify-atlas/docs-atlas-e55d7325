@@ -1,0 +1,151 @@
+---
+title: 'Inbox'
+description: 'Your deep work dashboard for high-focus productivity'
+icon: 'inbox'
+---
+
+The Inbox is your command center for focused work. It combines a productivity metrics dashboard with an energy-filtered task list, helping you work on what matters most when you have the energy to do it.
+
+## Deep Work Dashboard
+
+When you open the Inbox, you're greeted with a header showing your Work Area for the current day:
+
+```
+Work Area
+Friday, Mar 04
+```
+
+The dashboard includes three productivity metrics cards:
+
+<CardGroup cols={3}>
+  <Card title="Productivity Velocity" icon="chart-line">
+    Weekly task completion chart showing efficiency trends
+  </Card>
+  <Card title="Daily Focus" icon="zap">
+    High-focus tasks completed with circular progress ring
+  </Card>
+  <Card title="Tasks Done" icon="check">
+    Last 5 days completion bar chart with daily goal tracking
+  </Card>
+</CardGroup>
+
+### Understanding the Metrics
+
+**Productivity Velocity**
+- Shows a week-long trend of task completion
+- Displays efficiency percentage vs. previous period
+- Example: "+12% Efficiency" badge
+
+**Daily Focus**
+- Tracks high-energy tasks completed today
+- Shows trend compared to yesterday (e.g., "+25% vs yesterday")
+- Visual progress ring toward daily focus goal (default: 3 tasks)
+
+**Tasks Done**
+- Mini bar chart of last 5 days
+- Today's bar highlighted in cyan (`#06b6d4`)
+- Shows progress like "4/8" (completed/goal)
+
+## Energy Filter System
+
+The Inbox's most powerful feature is the energy filter, letting you match tasks to your current energy level:
+
+<Steps>
+  <Step title="View the filter bar">
+    Look for the "Filter by Energy" section with three pills:
+    - **Low Energy** (emerald green)
+    - **Neutral** (yellow)
+    - **High Focus** (purple)
+  </Step>
+  
+  <Step title="Select your energy level">
+    Click on the pill matching your current state. The task list updates instantly.
+  </Step>
+  
+  <Step title="Work on filtered tasks">
+    When "High Focus" is selected, the section title changes to "Deep Work" with a "HIGH FOCUS" badge.
+  </Step>
+  
+  <Step title="Clear the filter">
+    Click the "Clear" button to see all tasks again.
+  </Step>
+</Steps>
+
+<Note>
+By default, the Inbox opens with **High Focus** selected, encouraging you to tackle your most demanding work first.
+</Note>
+
+## Task List and Interaction
+
+Below the energy filter, you'll see your filtered task list:
+
+- Each task displays with a checkbox, title, and metadata
+- Click the checkbox to mark tasks complete
+- Tasks have energy indicators (colored dots) showing their energy requirement
+- Empty state message: "No tasks match this filter" when no results
+
+### Task Actions
+
+From the Inbox header, you can:
+
+<Tabs>
+  <Tab title="Search">
+    Use the search bar to filter tasks by keyword across title and notes.
+  </Tab>
+  
+  <Tab title="Notifications">
+    Click the bell icon to view task reminders and alerts.
+  </Tab>
+  
+  <Tab title="New Task">
+    Click "+ New Task" to open the task creation modal.
+  </Tab>
+</Tabs>
+
+## When to Use Inbox vs Other Views
+
+Choose the right view for your workflow:
+
+| View | Best For | Use When |
+|------|----------|----------|
+| **Inbox** | Deep work sessions | You want to focus on high-energy tasks or need productivity metrics |
+| **Today** | Daily execution | You want a simple list of today's scheduled tasks |
+| **Upcoming** | Future planning | You need to see what's coming in the next days/weeks |
+| **Anytime** | Context switching | You're working on specific projects |
+
+## Workflow Tips
+
+<AccordionGroup>
+  <Accordion title="Morning Focus Routine">
+    1. Open the Inbox
+    2. Check your Daily Focus score
+    3. Keep the "High Focus" filter active
+    4. Tackle 2-3 deep work tasks before checking email
+  </Accordion>
+  
+  <Accordion title="Energy-Based Time Blocking">
+    - **Morning (9-12)**: High Focus tasks (purple)
+    - **Afternoon (1-3)**: Neutral tasks (yellow)
+    - **Late day (4-6)**: Low Energy tasks (green)
+  </Accordion>
+  
+  <Accordion title="Using the Velocity Chart">
+    - Check weekly trends every Monday
+    - If efficiency is down, review your task estimation
+    - Celebrate upward trends - they indicate improving habits
+  </Accordion>
+</AccordionGroup>
+
+## Visual Design
+
+The Inbox embraces the "White Paper" aesthetic with neon accents:
+
+- Clean white/dark backgrounds
+- Jewel-tone accent colors (emerald, sapphire, ruby, lavender)
+- Smooth animations on card hover
+- Neon purple (`#a855f7`) for focus elements
+- Cyan (`#06b6d4`) for current day highlights
+
+<Note>
+All productivity metrics animate smoothly when the page loads, creating a delightful, premium experience.
+</Note>

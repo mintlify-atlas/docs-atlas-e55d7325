@@ -1,0 +1,344 @@
+---
+title: Architecture Overview
+description: High-level system architecture and design decisions for Arre
+---
+
+## System Architecture
+
+Arre is built as a modern single-page application (SPA) with a serverless backend. The architecture follows a clear separation between client-side React application and Firebase backend services.
+
+<Note>
+  Arre uses Firebase emulators for local development, allowing full offline development without touching production resources.
+</Note>
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    React Frontend                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Pages/     │  │  Features/   │  │   Layout/    │  │
+│  │   Views      │  │  Components  │  │  Components  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         │                  │                 │          │
+│         └──────────────────┴─────────────────┘          │
+│                        │                                │
+│              ┌─────────▼─────────┐                      │
+│              │  Firebase SDK     │                      │
+│              │  (src/lib/)       │                      │
+│              └─────────┬─────────┘                      │
+└────────────────────────┼──────────────────────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │      Firebase Services      │
+          │  ┌────────┐  ┌────────┐    │
+          │  │ Auth   │  │Firestore│    │
+          │  └────────┘  └────────┘    │
+          │  ┌────────┐  ┌────────┐    │
+          │  │Storage │  │Functions│    │
+          │  └────────┘  └────────┘    │
+          └──────────────┬──────────────┘
+                         │
+              ┌──────────▼──────────┐
+              │  External Services  │
+              │  • Gemini 2.5 Flash │
+              │  • Google Tasks API │
+              └─────────────────────┘
+```
+
+## Frontend Architecture
+
+### React Application Structure
+
+The frontend is built with **React 19** and follows a feature-based organization pattern:
+
+<Tabs>
+  <Tab title="Routing">
+    Arre uses React Router for client-side routing with protected routes:
+
+    ```tsx
+    // src/App.tsx
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        
+        <Route element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/upcoming" element={<Upcoming />} />
+          {/* ... more routes */}
+        </Route>
+      </Routes>
+    </BrowserRouter>
+    ```
+
+    All routes except `/login` are wrapped in `ProtectedRoute` which verifies authentication status before rendering.
+  </Tab>
+
+  <Tab title="State Management">
+    Arre uses **React Context** for global state management instead of external libraries like Redux:
+
+    - **AuthContext** (`src/lib/auth/AuthContext.tsx:24`): Manages user authentication state and auth methods
+    - **ThemeProvider** (`src/features/theme/ThemeProvider.tsx`): Handles light/dark theme preferences
+
+    Real-time data syncing is handled through Firebase SDK listeners, not centralized state:
+
+    ```tsx
+    // src/features/tasks/hooks/useTasks.ts:174-185
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const fetchedTasks = snapshot.docs.map(convertTask);
+        setTasks(fetchedTasks);
+        setLoading(false);
+      }
+    );
+    ```
+  </Tab>
+
+  <Tab title="Component Architecture">
+    Components are organized by purpose:
+
+    - **Pages** (`src/pages/`): Top-level route components
+    - **Features** (`src/features/`): Domain-specific components and hooks
+    - **Layout** (`src/layout/`): Structural components (Sidebar, MainLayout, BottomNav)
+    - **Shared** (`src/shared/`): Common types and utilities
+
+    Each feature module contains its components, hooks, and styles co-located.
+  </Tab>
+</Tabs>
+
+## Backend Architecture
+
+### Firebase Services
+
+Arre leverages Firebase as a Backend-as-a-Service (BaaS) platform:
+
+<Accordion title="Firebase Authentication">
+  Handles user identity with multiple sign-in methods:
+
+  - **Google OAuth**: Primary sign-in method
+  - **Anonymous Auth**: Allows users to try the app without creating an account
+  - **Account Linking**: Anonymous users can upgrade to Google accounts while preserving data
+
+  ```tsx
+  // src/lib/auth/AuthContext.tsx:78-79
+  if (auth.currentUser.isAnonymous) {
+    result = await linkWithPopup(auth.currentUser, provider);
+  }
+  ```
+</Accordion>
+
+<Accordion title="Cloud Firestore">
+  NoSQL document database for real-time data storage:
+
+  **Data Model:**
+  ```
+  users/{userId}/
+    ├── tasks/{taskId}          // User's tasks
+    ├── projects/{projectId}    // User's projects
+    └── integrations/
+        └── googleTasks         // OAuth tokens
+  ```
+
+  **Security:** All data is scoped per user with Firestore Security Rules (`firestore.rules:34-53`)
+
+  ```javascript
+  match /users/{userId} {
+    allow read, write: if isOwner(userId);
+    
+    match /tasks/{taskId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidTask();
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Cloud Functions">
+  Serverless backend logic running on Node.js 22 (`functions/package.json:12`):
+
+  - **`processMagicImport`**: AI-powered task extraction from documents (PDF, CSV, text)
+  - **`generateBriefing`**: Creates personalized daily briefings using Gemini AI
+  - **`getGoogleTaskLists`**: Fetches Google Tasks lists for integration
+  - **`getGoogleTasks`**: Retrieves tasks from Google Tasks API
+  - **`updateGoogleTask`**: Syncs task status back to Google Tasks
+
+  All functions use Firebase Callable pattern for authentication and type-safe invocation from the client.
+</Accordion>
+
+<Accordion title="Cloud Storage">
+  Used for storing document uploads for the Magic Import feature. Files are temporarily stored, processed by Cloud Functions, then tasks are extracted.
+</Accordion>
+
+## Data Flow & Real-time Synchronization
+
+### Task Management Flow
+
+```
+┌─────────────┐                ┌──────────────┐                ┌────────────┐
+│   User UI   │───add task────▶│  useTasks()  │───addDoc()────▶│ Firestore  │
+│  Component  │                │     Hook     │                │            │
+└─────────────┘                └──────────────┘                └────────────┘
+       ▲                              ▲                              │
+       │                              │                              │
+       │                              │         onSnapshot()         │
+       └──────────re-render───────────┴──────────(listener)──────────┘
+```
+
+### Real-time Sync Model
+
+Arre uses **Firestore's real-time listeners** for instant data synchronization:
+
+```tsx
+// src/features/tasks/hooks/useTasks.ts:96-188
+useEffect(() => {
+  if (!user) return;
+  
+  const tasksRef = collection(db, 'users', user.uid, 'tasks');
+  const q = query(tasksRef, where('status', '==', 'todo'));
+  
+  // Real-time listener
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedTasks = snapshot.docs.map(convertTask);
+    setTasks(fetchedTasks);
+  });
+  
+  return () => unsubscribe();
+}, [user, view]);
+```
+
+<Warning>
+  Firestore listeners run continuously while a component is mounted. Always clean up listeners in the useEffect return function to prevent memory leaks.
+</Warning>
+
+**Benefits:**
+- Zero polling required
+- Instant updates across devices
+- Offline support with local cache
+- Automatic conflict resolution
+
+### AI Integration Flow
+
+```
+┌──────────────┐        ┌─────────────────┐        ┌──────────────┐
+│ User uploads │        │ Cloud Function  │        │   Gemini AI  │
+│   document   │───────▶│ processMagic    │───────▶│  2.5 Flash   │
+└──────────────┘        │    Import       │        └──────────────┘
+                        └─────────────────┘               │
+                                 │                        │
+                                 ▼                        │
+                        ┌─────────────────┐              │
+                        │  Parse content  │◀─────────────┘
+                        │  (PDF/CSV/text) │
+                        └─────────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │ Extract tasks   │
+                        │ Return JSON     │
+                        └─────────────────┘
+```
+
+**Implementation** (`functions/index.js:50-112`):
+
+1. Client uploads file to Cloud Function
+2. Function parses content based on MIME type (PDF, CSV, or text)
+3. Sends content to Gemini 2.5 Flash with structured prompt
+4. AI returns JSON array of actionable tasks
+5. Client receives tasks and adds them to Firestore
+
+## Key Design Decisions
+
+### 1. Firebase-First Architecture
+
+**Why:** Eliminates need for custom backend infrastructure. Firebase provides auth, database, functions, and hosting in one integrated platform.
+
+**Trade-offs:** 
+- ✅ Fast development, built-in scaling, real-time sync
+- ❌ Vendor lock-in, limited query flexibility
+
+### 2. Feature-Based Code Organization
+
+Instead of grouping by file type (components/, hooks/, utils/), Arre groups by feature:
+
+```
+src/features/
+  ├── tasks/
+  │   ├── TaskItem.tsx
+  │   ├── TaskItem.module.css
+  │   ├── TaskEditorModal.tsx
+  │   └── hooks/
+  │       └── useTasks.ts
+  ├── projects/
+  └── dashboard/
+```
+
+**Why:** Co-locating related code improves maintainability and makes features easier to understand and modify.
+
+### 3. CSS Modules + CSS Variables
+
+Styling uses CSS Modules for scoping with global CSS variables for theming:
+
+```css
+/* src/styles/variables.css */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #171717;
+}
+
+[data-theme="dark"] {
+  --color-bg: #0a0a0a;
+  --color-text: #fafafa;
+}
+```
+
+**Why:** No runtime cost, excellent TypeScript integration, simple theme switching.
+
+### 4. TypeScript Throughout
+
+All source code is TypeScript with strict typing (`tsconfig.json`).
+
+**Why:** Catch errors at compile time, better IDE support, self-documenting code through types.
+
+### 5. Emulator-First Development
+
+Development uses Firebase emulators for all services (`src/lib/firebase.ts:27-33`):
+
+```tsx
+if (import.meta.env.DEV) {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectStorageEmulator(storage, 'localhost', 9199);
+  connectFunctionsEmulator(functions, 'localhost', 5001);
+}
+```
+
+**Why:** Develop and test offline, avoid accidental production data changes, faster iteration.
+
+### 6. Optimistic UI Updates
+
+While not explicitly shown in the code, Firestore's client SDK includes built-in optimistic updates. When you call `addDoc()` or `updateDoc()`, the UI updates immediately from the local cache before server confirmation.
+
+**Why:** Better perceived performance, users don't wait for network round-trips.
+
+## Performance Considerations
+
+- **Code Splitting**: Vite automatically splits code by route
+- **Lazy Loading**: Components load on-demand
+- **Firestore Indexes**: Custom indexes defined in `firestore.indexes.json` for complex queries
+- **Real-time Query Optimization**: Queries are scoped by user ID and filtered by view to minimize data transfer
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tech Stack" icon="layer-group" href="/development/tech-stack">
+    Detailed breakdown of all technologies and their versions
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    Deep dive into directory organization and file conventions
+  </Card>
+</CardGroup>

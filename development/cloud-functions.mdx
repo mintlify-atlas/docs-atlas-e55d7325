@@ -1,0 +1,444 @@
+---
+title: 'Cloud Functions'
+description: 'Serverless backend functions for AI integration and external APIs'
+---
+
+## Overview
+
+Arre uses Firebase Cloud Functions (2nd generation) for serverless backend operations. Functions handle AI processing, external API integrations, and operations that require server-side execution.
+
+## Available Functions
+
+### processMagicImport
+
+Extracts actionable tasks from uploaded documents using Google Gemini AI.
+
+<Note>
+  This function is the core of the "Magic Import" feature, allowing users to upload PDFs, CSVs, or text files and automatically generate task lists.
+</Note>
+
+#### Configuration
+
+```javascript functions/index.js
+exports.processMagicImport = onCall({ 
+  secrets: [geminiApiKey],
+  memory: "512MiB",
+  timeoutSeconds: 60
+}, async (request) => {
+  // Function implementation
+});
+```
+
+<ParamField path="secrets" type="Secret[]">
+  Requires `GEMINI_API_KEY` from Google Cloud Secret Manager.
+</ParamField>
+
+<ParamField path="memory" type="string">
+  Allocated memory: `512MiB` for processing large documents.
+</ParamField>
+
+<ParamField path="timeoutSeconds" type="number">
+  Maximum execution time: `60` seconds.
+</ParamField>
+
+#### Input Parameters
+
+<ParamField path="fileBase64" type="string" required>
+  Base64-encoded file content. Supports PDF, CSV, and text files.
+</ParamField>
+
+<ParamField path="mimeType" type="string" required>
+  File MIME type. Supported values:
+  - `application/pdf`
+  - `text/csv`
+  - `application/vnd.ms-excel`
+  - `text/plain`
+</ParamField>
+
+<ParamField path="instructions" type="string">
+  Optional user instructions for task extraction. Example: "Focus on action items from the meeting notes"
+</ParamField>
+
+#### Output Format
+
+<ResponseField name="tasks" type="string[]" required>
+  Array of extracted task titles. Maximum 10 tasks returned.
+
+  ```json
+  {
+    "tasks": [
+      "Review Q3 report",
+      "Schedule team meeting",
+      "Update project timeline"
+    ]
+  }
+  ```
+</ResponseField>
+
+#### Implementation Details
+
+<Steps>
+  <Step title="Authentication Check">
+    Validates that the user is authenticated:
+
+    ```javascript functions/index.js:57-59
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be logged in.');
+    }
+    ```
+  </Step>
+  <Step title="Parse File Content">
+    Extracts text based on MIME type:
+
+    ```javascript functions/index.js:26-44
+    const parseFileContent = async (fileBase64, mimeType) => {
+      const buffer = Buffer.from(fileBase64, 'base64');
+
+      if (mimeType === 'application/pdf') {
+        const data = await pdf(buffer);
+        return data.text;
+      } 
+      
+      if (mimeType === 'text/csv' || mimeType === 'application/vnd.ms-excel') {
+        const records = parse(buffer.toString('utf-8'), {
+          columns: true,
+          skip_empty_lines: true
+        });
+        return JSON.stringify(records, null, 2);
+      }
+
+      // Fallback for text files
+      return buffer.toString('utf-8');
+    };
+    ```
+  </Step>
+  <Step title="AI Prompt Engineering">
+    Constructs prompt for Gemini AI:
+
+    ```javascript functions/index.js:72-83
+    const systemPrompt = `
+      You are an expert productivity assistant for the "Arre" app.
+      Your goal is to extract actionable tasks from the provided document content.
+      
+      Rules:
+      1. Return ONLY a valid JSON array of strings. No markdown, no explanations.
+      2. Each string must be a clear, actionable task title.
+      3. If specific instructions are provided, prioritize them.
+      4. Limit to the top 10 most important tasks if the document is large.
+      
+      User Instructions: ${instructions || "Extract all tasks."}
+    `;
+    ```
+  </Step>
+  <Step title="Call Gemini API">
+    Sends request to Google Gemini 2.5 Flash:
+
+    ```javascript functions/index.js:86-92
+    const model = getGeminiModel(geminiApiKey.value());
+    
+    const result = await model.generateContent([
+      systemPrompt,
+      { text: `Document Content:\n${extractedText.substring(0, 30000)}` }
+    ]);
+
+    const response = result.response;
+    const text = response.text();
+    ```
+  </Step>
+  <Step title="Parse and Validate Response">
+    Cleans AI response and validates JSON:
+
+    ```javascript functions/index.js:98-104
+    const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const tasks = JSON.parse(jsonString);
+
+    if (!Array.isArray(tasks)) {
+      throw new Error("AI did not return an array.");
+    }
+
+    return { tasks };
+    ```
+  </Step>
+</Steps>
+
+#### Error Handling
+
+```javascript functions/index.js:108-111
+try {
+  // Function logic...
+} catch (error) {
+  console.error("Magic Import Error:", error);
+  throw new HttpsError('internal', 'Details extraction failed.', error.message);
+}
+```
+
+<Warning>
+  All errors are logged to Cloud Functions logs and returned as `HttpsError` with sanitized messages to avoid exposing sensitive information.
+</Warning>
+
+#### Usage Example
+
+```typescript
+import { httpsCallable } from 'firebase/functions';
+import { functions } from './firebase';
+
+const processMagicImport = httpsCallable(functions, 'processMagicImport');
+
+const fileInput = document.querySelector('input[type="file"]');
+const file = fileInput.files[0];
+
+// Convert file to base64
+const reader = new FileReader();
+reader.onload = async (e) => {
+  const base64 = e.target.result.split(',')[1];
+  
+  const result = await processMagicImport({
+    fileBase64: base64,
+    mimeType: file.type,
+    instructions: 'Extract urgent action items only'
+  });
+  
+  console.log('Extracted tasks:', result.data.tasks);
+};
+reader.readAsDataURL(file);
+```
+
+### generateBriefing
+
+Generates AI-powered daily briefings based on user's tasks and projects.
+
+#### Configuration
+
+```javascript functions/index.js:118-122
+exports.generateBriefing = onCall({
+  secrets: [geminiApiKey],
+  memory: "512MiB",
+  timeoutSeconds: 60
+}, async (request) => { /* ... */ });
+```
+
+#### Input Parameters
+
+<ParamField path="tasks" type="Task[]" required>
+  Array of user's tasks with status, date, and project information.
+</ParamField>
+
+<ParamField path="projects" type="Project[]">
+  Array of user's projects for context.
+</ParamField>
+
+<ParamField path="localTime" type="string">
+  User's local time in ISO 8601 format for time-aware briefings.
+</ParamField>
+
+#### Output Format
+
+<ResponseField name="briefing" type="string" required>
+  Markdown-formatted briefing with overview, today's tasks, and upcoming priorities.
+
+  ```markdown
+  Good morning! You have 5 tasks on your plate today.
+
+  **Today's Focus:**
+  - Complete the Q3 report for your Work project
+  - Schedule team meeting
+  - Review code changes
+
+  **Tomorrow:**
+  Keep an eye on the project deadline approaching on Friday.
+  ```
+</ResponseField>
+
+### Google Tasks Integration
+
+Three functions handle Google Tasks API integration:
+
+<Tabs>
+  <Tab title="getGoogleTaskLists">
+    Fetches available task lists for the authenticated user.
+
+    ```javascript functions/index.js:207-224
+    exports.getGoogleTaskLists = onCall({
+      secrets: [googleClientId, googleClientSecret],
+      memory: "256MiB",
+      timeoutSeconds: 30
+    }, async (request) => {
+      const tasksService = await getGoogleTasksClient(request.auth.uid);
+      const res = await tasksService.tasklists.list({ maxResults: 100 });
+      return { lists: res.data.items || [] };
+    });
+    ```
+  </Tab>
+  <Tab title="getGoogleTasks">
+    Fetches tasks from a specific task list.
+
+    **Input:**
+    - `listId` (required): Google Tasks list ID
+    - `showCompleted`: Include completed tasks (default: true)
+    - `showHidden`: Include hidden tasks (default: true)
+
+    ```javascript functions/index.js:230-257
+    exports.getGoogleTasks = onCall({
+      secrets: [googleClientId, googleClientSecret]
+    }, async (request) => {
+      const { listId, showCompleted, showHidden } = request.data;
+      const tasksService = await getGoogleTasksClient(request.auth.uid);
+      const res = await tasksService.tasks.list({
+        tasklist: listId,
+        showCompleted: showCompleted !== undefined ? showCompleted : true,
+        maxResults: 100
+      });
+      return { tasks: res.data.items || [] };
+    });
+    ```
+  </Tab>
+  <Tab title="updateGoogleTask">
+    Updates a task's status or other fields.
+
+    **Input:**
+    - `listId` (required): Google Tasks list ID
+    - `taskId` (required): Task ID to update
+    - `taskPayload` (required): Fields to update
+
+    ```javascript functions/index.js:263-290
+    exports.updateGoogleTask = onCall({
+      secrets: [googleClientId, googleClientSecret]
+    }, async (request) => {
+      const { listId, taskId, taskPayload } = request.data;
+      const tasksService = await getGoogleTasksClient(request.auth.uid);
+      const res = await tasksService.tasks.patch({
+        tasklist: listId,
+        task: taskId,
+        requestBody: taskPayload
+      });
+      return { task: res.data };
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Secret Management
+
+### Defining Secrets
+
+Secrets are defined at the top of `functions/index.js`:
+
+```javascript functions/index.js:12-15
+const { defineSecret } = require('firebase-functions/params');
+
+const geminiApiKey = defineSecret('GEMINI_API_KEY');
+const googleClientId = defineSecret('GOOGLE_CLIENT_ID');
+const googleClientSecret = defineSecret('GOOGLE_CLIENT_SECRET');
+```
+
+### Setting Secrets
+
+Use Firebase CLI to set secrets in Google Cloud Secret Manager:
+
+```bash
+firebase functions:secrets:set GEMINI_API_KEY
+firebase functions:secrets:set GOOGLE_CLIENT_ID
+firebase functions:secrets:set GOOGLE_CLIENT_SECRET
+```
+
+<Note>
+  Secrets are automatically injected into the function runtime when specified in the `secrets` parameter.
+</Note>
+
+### Accessing Secret Values
+
+```javascript
+const apiKey = geminiApiKey.value();
+```
+
+<Warning>
+  Never log or expose secret values in responses. Always use try-catch blocks to prevent secret leakage through error messages.
+</Warning>
+
+## Dependencies
+
+Cloud Functions use the following npm packages:
+
+```json functions/package.json
+{
+  "dependencies": {
+    "firebase-admin": "^latest",
+    "firebase-functions": "^latest",
+    "@google/generative-ai": "^latest",
+    "googleapis": "^latest",
+    "pdf-parse": "^latest",
+    "csv-parse": "^latest"
+  }
+}
+```
+
+## Deployment
+
+### Deploy All Functions
+
+```bash
+firebase deploy --only functions
+```
+
+### Deploy Specific Function
+
+```bash
+firebase deploy --only functions:processMagicImport
+```
+
+### View Logs
+
+```bash
+firebase functions:log
+```
+
+<Note>
+  Functions automatically scale based on traffic. Cold starts may add 1-2 seconds to first invocation.
+</Note>
+
+## Best Practices
+
+<Steps>
+  <Step title="Always Validate Input">
+    Check authentication and validate all input parameters before processing:
+
+    ```javascript
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be logged in.');
+    }
+
+    if (!request.data.requiredField) {
+      throw new HttpsError('invalid-argument', 'Missing required field.');
+    }
+    ```
+  </Step>
+  <Step title="Use Structured Error Handling">
+    Return `HttpsError` for client-friendly error messages:
+
+    ```javascript
+    try {
+      // Function logic
+    } catch (error) {
+      console.error('Function Error:', error);
+      throw new HttpsError('internal', 'Operation failed.', error.message);
+    }
+    ```
+  </Step>
+  <Step title="Set Appropriate Timeouts">
+    AI operations need longer timeouts (60s), while API calls can use 30s.
+  </Step>
+  <Step title="Log for Debugging">
+    Use `console.log` and `console.error` - logs appear in Cloud Functions dashboard.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Security Rules" icon="shield" href="/development/security-rules">
+    Learn how functions interact with Firestore
+  </Card>
+  <Card title="Firebase Setup" icon="fire" href="/development/firebase-setup">
+    Configure secrets and deployment
+  </Card>
+</CardGroup>

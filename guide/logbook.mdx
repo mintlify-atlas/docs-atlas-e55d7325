@@ -1,0 +1,299 @@
+---
+title: 'Logbook'
+description: 'Review your completed tasks and celebrate your accomplishments'
+icon: 'book-open'
+---
+
+The Logbook is your personal archive of completed work. It provides a chronological history of everything you've accomplished, helping you track progress, review productivity patterns, and build momentum through visible wins.
+
+## Overview
+
+The Logbook displays completed tasks in reverse chronological order, grouped by completion date:
+
+```
+Logbook
+A history of everything you've completed.
+
+Friday, March 04, 2026
+✓ Review Q1 metrics
+✓ Draft blog post outline
+✓ Team standup
+✓ Update project roadmap
+
+Thursday, March 03, 2026
+✓ Client presentation
+✓ Code review for PR #234
+✓ Design system updates
+
+Wednesday, March 02, 2026
+✓ Budget planning meeting
+✓ Write release notes
+```
+
+<Note>
+Completed tasks automatically move to the Logbook. You don't need to manually archive anything.
+</Note>
+
+## Grouped by Date
+
+Tasks are organized into date sections for easy navigation:
+
+<Steps>
+  <Step title="Date headers">
+    Full format: "Friday, March 04, 2026" for clear context
+  </Step>
+  
+  <Step title="Task grouping">
+    All tasks completed on the same date appear together
+  </Step>
+  
+  <Step title="Reverse chronological order">
+    Most recent completions appear at the top
+  </Step>
+  
+  <Step title="Completion metadata">
+    Each task retains its project, energy level, and other details
+  </Step>
+</Steps>
+
+### Date Grouping Logic
+
+The Logbook uses the `completedAt` timestamp to group tasks:
+
+- Tasks are grouped by the date they were completed (not created)
+- If `completedAt` is missing, falls back to `updatedAt` or `createdAt`
+- Date keys are formatted as `YYYY-MM-DD` for reliable sorting
+- Display format uses full weekday and month names for readability
+
+## Viewing Completed Tasks
+
+The Logbook provides a clean, focused view of your accomplishments:
+
+<CardGroup cols={2}>
+  <Card title="Task Details" icon="list-check">
+    Each completed task shows its full title, project association, and energy indicator
+  </Card>
+  <Card title="Project Context" icon="folder">
+    Colored project dots help you see which areas you've been productive in
+  </Card>
+  <Card title="Energy Patterns" icon="zap">
+    Review which energy levels you complete most often
+  </Card>
+  <Card title="Infinite Scroll" icon="arrows-down-to-line">
+    Scroll through weeks and months of completed work
+  </Card>
+</CardGroup>
+
+### Empty State
+
+If you haven't completed any tasks yet, the Logbook shows an encouraging empty state:
+
+```
+┌─────────────────────────────┐
+│                             │
+│     ✓  (large icon)         │
+│                             │
+│  Your logbook is empty.     │
+│                             │
+│  Tasks you complete will    │
+│  appear here.               │
+│                             │
+└─────────────────────────────┘
+```
+
+## Reviewing Past Accomplishments
+
+The Logbook is a powerful tool for reflection and motivation:
+
+<Tabs>
+  <Tab title="Daily Review">
+    **End of day:**
+    - Scroll to today's date
+    - Review what you accomplished
+    - Feel satisfaction from visible progress
+    - Plan tomorrow based on completion patterns
+  </Tab>
+  
+  <Tab title="Weekly Review">
+    **Sunday evening or Monday morning:**
+    - Review the past 7 days
+    - Count tasks by project to see where time went
+    - Identify productivity patterns (which days were most productive?)
+    - Celebrate wins before planning the new week
+  </Tab>
+  
+  <Tab title="Monthly Retrospective">
+    **End of month:**
+    - Scroll through the entire month
+    - Count total completions for momentum tracking
+    - Review project progress over time
+    - Identify energy trends (completing more high/low tasks?)
+  </Tab>
+  
+  <Tab title="Productivity Analysis">
+    **Ad-hoc:**
+    - Look for patterns in completion dates
+    - Which days of the week are most productive?
+    - Do you complete more tasks in the morning or evening?
+    - Are you finishing high-focus tasks or avoiding them?
+  </Tab>
+</Tabs>
+
+## Archive Management
+
+The Logbook serves as your task archive with automatic management:
+
+### Automatic Archiving
+
+<Steps>
+  <Step title="Task completed">
+    When you check off a task anywhere in Arre, its status changes to 'completed'
+  </Step>
+  
+  <Step title="Timestamp recorded">
+    The `completedAt` field is set to the current date and time
+  </Step>
+  
+  <Step title="Appears in Logbook">
+    The task immediately appears in the Logbook under today's date
+  </Step>
+  
+  <Step title="Removed from other views">
+    Completed tasks are filtered out of Today, Upcoming, Anytime, and Inbox
+  </Step>
+</Steps>
+
+### Uncompleting Tasks
+
+Sometimes you need to uncomplete a task (checked it by accident, or it needs more work):
+
+<Warning>
+**From the Logbook:**
+
+Click the checkbox on a completed task to reactivate it. This will:
+- Set status back to 'todo'
+- Clear the `completedAt` timestamp
+- Move the task back to its appropriate view (Today/Upcoming/Anytime)
+- Remove it from the Logbook
+</Warning>
+
+## Visual Design
+
+The Logbook embraces a clean, archival aesthetic:
+
+- **Header icon**: CheckSquare icon with title "Logbook"
+- **Subtitle**: "A history of everything you've completed"
+- **Date headers**: Subtle styling separates date groups
+- **Completed tasks**: Displayed with checkmarks and full task details
+- **Muted styling**: Completed tasks appear slightly less prominent than active tasks
+
+<Note>
+Completed tasks maintain their visual identity (project colors, energy indicators) so you can analyze patterns even after completion.
+</Note>
+
+## Productivity Insights
+
+Use the Logbook to extract valuable insights:
+
+<AccordionGroup>
+  <Accordion title="Completion Velocity">
+    Count tasks per day/week to track your velocity:
+    - **High velocity days**: 8+ tasks completed
+    - **Normal days**: 4-7 tasks completed
+    - **Slow days**: 1-3 tasks completed
+    
+    Compare velocity to your energy and schedule patterns.
+  </Accordion>
+  
+  <Accordion title="Project Balance">
+    Review which projects are progressing:
+    - Dominated by one project? Consider if that's intentional
+    - Projects with no completions? May need attention or archiving
+    - Balanced completions across projects? Good multi-project management
+  </Accordion>
+  
+  <Accordion title="Energy Level Distribution">
+    Look at the energy indicators on completed tasks:
+    - **Mostly high (purple)**: Great deep work habits
+    - **Mostly neutral (yellow)**: Solid execution
+    - **Mostly low (green)**: May be avoiding challenging work
+    
+    Aim for a balance that matches your goals.
+  </Accordion>
+  
+  <Accordion title="Streak Building">
+    Use the Logbook to maintain streaks:
+    - Check if you completed tasks every day this week
+    - Build momentum by ensuring daily completions
+    - Even 1 task per day builds a powerful habit
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+### Daily Shutdown Routine
+
+End each day with a quick Logbook review:
+
+1. **Open the Logbook** at end of workday
+2. **Scan today's completions** (should be first date section)
+3. **Count your wins** - even small progress counts
+4. **Notice patterns** - Did you complete high-focus work?
+5. **Celebrate** - Take 30 seconds to feel satisfied
+6. **Close the app** with a sense of accomplishment
+
+<Check>
+This 2-minute routine builds momentum and positive reinforcement for your productivity system.
+</Check>
+
+### Weekly Review Integration
+
+Incorporate the Logbook into your weekly review:
+
+<Tabs>
+  <Tab title="Step 1: Count">
+    How many tasks did you complete this week? More than last week?
+  </Tab>
+  
+  <Tab title="Step 2: Analyze">
+    Which projects moved forward? Which stalled?
+  </Tab>
+  
+  <Tab title="Step 3: Celebrate">
+    Name 3 specific wins from the week using the Logbook as reference.
+  </Tab>
+  
+  <Tab title="Step 4: Adjust">
+    Based on completion patterns, adjust next week's planning (fewer/more commitments?).
+  </Tab>
+</Tabs>
+
+### Motivation During Slumps
+
+When you feel unproductive or stuck:
+
+1. **Open the Logbook**
+2. **Scroll back 2-3 weeks**
+3. **Count everything you've completed**
+4. **Remember**: You've done hard things before
+5. **Start small today** - one task to rebuild momentum
+
+<Note>
+The Logbook is tangible proof of your capability. When motivation is low, let past wins remind you what you're capable of.
+</Note>
+
+## Integration with Other Views
+
+The Logbook works seamlessly with Arre's other views:
+
+| Action | Result |
+|--------|--------|
+| Complete task in Today | Appears in Logbook under today's date |
+| Complete task in Inbox | Counts toward productivity metrics + Logbook |
+| Complete task in Anytime | Archived in Logbook, maintains project association |
+| Uncomplete from Logbook | Returns to Anytime (or Today/Upcoming if dated) |
+| Complete Someday task | Appears in Logbook (rare, usually activate first) |
+
+<Check>
+Every completion flows naturally into the Logbook, creating a continuous record of your work without manual effort.
+</Check>

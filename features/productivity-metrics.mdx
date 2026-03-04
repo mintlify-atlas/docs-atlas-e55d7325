@@ -1,0 +1,187 @@
+---
+title: 'Productivity Metrics'
+description: 'Track your task completion velocity and focus patterns with visual insights'
+icon: 'chart-line'
+---
+
+## Overview
+
+Arre's productivity metrics help you understand your work patterns and completion rates over time. Three key metrics are displayed on your dashboard: Productivity Velocity, Daily Focus, and Tasks Done.
+
+## Productivity Velocity
+
+The velocity chart shows your 7-day task completion rate as a smooth area graph.
+
+### What It Shows
+
+- **Completion trend**: How many tasks you've completed each day over the past week
+- **Efficiency trend**: Percentage change in your completion rate (e.g., "+12% Efficiency")
+- **Visual pattern**: Spot your most and least productive days at a glance
+
+**Reference**: `DashboardStats.tsx:37-46`
+
+### How It Works
+
+The chart uses data from the past 7 days to plot your daily completions. The efficiency trend compares your recent performance to your baseline.
+
+<Tabs>
+  <Tab title="Upward Trend">
+    When you see green "+ %" indicators, you're improving your completion rate compared to previous periods. This is a good sign that your productivity systems are working.
+  </Tab>
+
+  <Tab title="Downward Trend">
+    Red "- %" indicators mean your completion rate has decreased. This isn't necessarily bad - it might indicate a busy week with longer tasks or external factors affecting your workflow.
+  </Tab>
+
+  <Tab title="Flat Trend">
+    "0%" means you're maintaining a steady pace. Consistency is valuable for sustainable productivity.
+  </Tab>
+</Tabs>
+
+**Reference**: `DashboardStats.tsx:17-25`
+
+### Visualization Details
+
+The velocity chart uses:
+- **Cyan gradient fill**: Area under the curve shows cumulative effort
+- **Smooth curves**: Monotone interpolation for clean, readable trends
+- **Interactive tooltips**: Hover over any point to see exact completion counts
+- **Responsive design**: Adapts to different screen sizes
+
+**Reference**: `VelocityChart.tsx:10-36`
+
+## Daily Focus
+
+Track how many high-focus tasks you complete each day.
+
+### What It Shows
+
+- **High-focus task count**: Number of "High" energy tasks completed today
+- **Daily goal progress**: Circular progress indicator (default goal: 3 tasks)
+- **Focus trend**: Comparison to yesterday's high-focus completions
+
+**Reference**: `DashboardStats.tsx:48-75`
+
+### Why It Matters
+
+High-focus tasks represent deep work - the meaningful, challenging tasks that require concentration. Tracking these separately helps you:
+
+- Prioritize important work over busy work
+- Identify your peak focus periods
+- Set realistic goals for deep work sessions
+
+<Note>
+  The default daily goal is 3 high-focus tasks. This is based on research showing that 3-4 hours of deep work per day is sustainable for most people.
+</Note>
+
+### Visual Indicators
+
+The focus metric uses a circular progress ring:
+- **Purple accent**: High-energy tasks are highlighted with a vibrant purple stroke
+- **Animated fill**: The ring fills based on your progress toward the daily goal
+- **Trend comparison**: Shows percentage change from yesterday
+
+**Reference**: `DashboardStats.tsx:58-73`
+
+## Tasks Done
+
+A simple bar chart showing your daily task completions over the past 5 days.
+
+### What It Shows
+
+- **Today's progress**: Current count toward your daily goal (e.g., "5/8")
+- **5-day trend**: Bar chart of recent completions
+- **Visual comparison**: Today's bar is highlighted in cyan, past days in gray
+
+**Reference**: `DashboardStats.tsx:77-104`
+
+### How to Use It
+
+This metric gives you immediate feedback on your daily progress:
+
+- **Morning check**: See how many tasks you need to complete today
+- **End of day review**: Compare today to your recent average
+- **Weekly patterns**: Identify which days tend to be most productive
+
+### Animated Bars
+
+Each bar animates on load with a staggered delay, making it easy to see the progression over time. Hover over any bar to see the exact task count for that day.
+
+**Reference**: `DashboardStats.tsx:84-101`
+
+## How Metrics Help Improve Productivity
+
+<CardGroup cols={2}>
+  <Card title="Spot Patterns" icon="calendar">
+    Notice when you're most productive and schedule important tasks accordingly. If Friday always shows low velocity, maybe that's admin day.
+  </Card>
+
+  <Card title="Set Realistic Goals" icon="target">
+    Use your average completion rate to set achievable daily goals. If you typically complete 6 tasks per day, don't plan 15.
+  </Card>
+
+  <Card title="Balance Task Types" icon="scale-balanced">
+    The Daily Focus metric helps ensure you're not just clearing quick tasks while avoiding important deep work.
+  </Card>
+
+  <Card title="Celebrate Progress" icon="trophy">
+    Visual trends make improvement tangible. Seeing your velocity increase over time is motivating.
+  </Card>
+</CardGroup>
+
+## Understanding Your Data
+
+<Accordion title="Why do metrics sometimes show 0% change?">
+  When your completion rate is identical to the comparison period (yesterday for focus, previous period for velocity), the trend shows 0%. This indicates stable, consistent productivity.
+</Accordion>
+
+<Accordion title="What if I have a negative trend?">
+  Negative trends aren't failures - they're information. You might be:
+  - Working on longer, more complex tasks
+  - Dealing with unexpected interruptions
+  - Intentionally slowing down to avoid burnout
+
+  Use trends to inform your planning, not to judge yourself.
+</Accordion>
+
+<Accordion title="How often do metrics update?">
+  Metrics update in real-time as you complete tasks. The velocity chart recalculates daily, while Daily Focus and Tasks Done update immediately when you check off tasks.
+</Accordion>
+
+<Accordion title="Can I export my metrics data?">
+  Metric export is not currently available but is planned for a future release. You'll be able to download CSV files of your completion history.
+</Accordion>
+
+## Best Practices
+
+### Review Metrics Weekly
+
+Set aside time each week to review your productivity metrics:
+
+1. Check your 7-day velocity trend
+2. Compare high-focus task completion to your goals
+3. Identify your most and least productive days
+4. Adjust your task planning based on patterns
+
+### Don't Optimize for Numbers Alone
+
+Metrics are tools for insight, not scorecards:
+
+- Quality matters more than quantity
+- Deep work on important tasks beats checking off trivial ones
+- Rest and recovery are essential for sustained productivity
+
+### Use Energy Levels Accurately
+
+Daily Focus metrics only work if you're honest about task energy levels. Don't mark everything as "High" - reserve that for genuine deep work.
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Task Management" icon="check-circle" href="/features/task-management">
+    Learn how completed tasks feed into metrics
+  </Card>
+  <Card title="Energy Filtering" icon="zap" href="/features/energy-filtering">
+    Assign energy levels to improve focus tracking
+  </Card>
+</CardGroup>

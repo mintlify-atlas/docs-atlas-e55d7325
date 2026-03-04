@@ -1,0 +1,598 @@
+---
+title: Technology Stack
+description: Comprehensive breakdown of technologies, libraries, and tools used in Arre
+---
+
+## Tech Stack Overview
+
+Arre is built with modern web technologies focused on developer experience, performance, and maintainability.
+
+## Frontend Stack
+
+### Core Framework
+
+<Tabs>
+  <Tab title="React">
+    **Version:** `19.2.4` ([package.json:30](/home/daytona/workspace/source/package.json:30))
+
+    React powers Arre's UI with modern features:
+
+    - **Concurrent Rendering**: Improved responsiveness for better UX
+    - **Automatic Batching**: Optimized re-renders
+    - **Hooks**: All components use functional components with hooks
+    - **Strict Mode**: Enabled in development for detecting potential issues
+
+    ```tsx
+    // src/main.tsx:5-9
+    ReactDOM.createRoot(document.getElementById('app')!).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    )
+    ```
+
+    **Why React 19?** Latest features like improved hydration, better async handling, and performance optimizations.
+  </Tab>
+
+  <Tab title="TypeScript">
+    **Version:** `~5.9.3` ([package.json:21](/home/daytona/workspace/source/package.json:21))
+
+    All source code is written in TypeScript:
+
+    ```typescript
+    // src/shared/types/task.ts:1-17
+    export type TaskStatus = 'todo' | 'completed' | 'canceled' | 'someday';
+    export type TaskTag = 'work' | 'personal' | 'errand' | 'urgent';
+
+    export interface Task {
+      id: string;
+      title: string;
+      notes?: string;
+      status: TaskStatus;
+      date?: string;
+      isEvening?: boolean;
+      energy?: 'low' | 'neutral' | 'high';
+      tags?: TaskTag[];
+      projectId?: string;
+      createdAt: string;
+      updatedAt?: string;
+      completedAt?: string;
+    }
+    ```
+
+    **Configuration:**
+    - Strict mode enabled
+    - ES2020 target
+    - Module resolution: bundler
+    - JSX: react-jsx (automatic runtime)
+  </Tab>
+
+  <Tab title="Vite">
+    **Version:** `^7.3.1` ([package.json:22](/home/daytona/workspace/source/package.json:22))
+
+    Vite serves as the build tool and dev server:
+
+    ```typescript
+    // vite.config.ts
+    import { defineConfig } from 'vite'
+    import react from '@vitejs/plugin-react'
+
+    export default defineConfig({
+      plugins: [react()],
+    })
+    ```
+
+    **Features:**
+    - ⚡️ Lightning-fast HMR (Hot Module Replacement)
+    - 📦 Optimized production builds with Rollup
+    - 🔌 Plugin-based architecture
+    - 📊 Built-in code splitting
+
+    **Dev Scripts:**
+    - `npm run dev` - Start dev server
+    - `npm run build` - Build for production
+    - `npm run preview` - Preview production build
+  </Tab>
+</Tabs>
+
+### Routing
+
+**React Router** `^7.13.0` ([package.json:33](/home/daytona/workspace/source/package.json:33))
+
+Handles client-side routing with nested routes and protected routes:
+
+```tsx
+// src/App.tsx:22-40
+<BrowserRouter>
+  <Routes>
+    <Route path="/login" element={<Login />} />
+    
+    <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/inbox" element={<Inbox />} />
+      <Route path="/upcoming" element={<Upcoming />} />
+      <Route path="/anytime" element={<Anytime />} />
+      <Route path="/someday" element={<Someday />} />
+      <Route path="/logbook" element={<Logbook />} />
+      <Route path="/briefing" element={<AIBriefing />} />
+      <Route path="/settings" element={<Settings />} />
+    </Route>
+  </Routes>
+</BrowserRouter>
+```
+
+### Styling & UI
+
+<AccordionGroup>
+  <Accordion title="CSS Modules">
+    Component-scoped styling without runtime overhead:
+
+    ```tsx
+    // src/pages/Dashboard.tsx (example pattern)
+    import styles from './Dashboard.module.css';
+
+    <div className={styles.container}>
+      <h1 className={styles.title}>Dashboard</h1>
+    </div>
+    ```
+
+    **Why CSS Modules?**
+    - Scoped styles prevent conflicts
+    - TypeScript integration via declarations
+    - Zero runtime cost
+    - Simple mental model
+  </Accordion>
+
+  <Accordion title="CSS Variables (Custom Properties)">
+    Global theme system using CSS variables:
+
+    ```css
+    /* src/styles/variables.css - Theme System */
+    :root {
+      --color-bg: #ffffff;
+      --color-text: #171717;
+      --accent-emerald: #10b981;
+      --radius-sm: 4px;
+      --spacing-md: 16px;
+    }
+
+    [data-theme="dark"] {
+      --color-bg: #0a0a0a;
+      --color-text: #fafafa;
+    }
+    ```
+
+    Theme switching is handled by `ThemeProvider` which toggles the `data-theme` attribute.
+  </Accordion>
+
+  <Accordion title="Lucide React Icons">
+    **Version:** `^0.564.0` ([package.json:29](/home/daytona/workspace/source/package.json:29))
+
+    Beautiful, consistent icon library:
+
+    ```tsx
+    import { Calendar, CheckCircle, Inbox } from 'lucide-react';
+
+    <Calendar size={20} />
+    <CheckCircle className={styles.icon} />
+    ```
+
+    **Why Lucide?**
+    - Tree-shakeable (only import icons you use)
+    - Consistent design language
+    - Customizable size, color, stroke
+  </Accordion>
+
+  <Accordion title="Recharts">
+    **Version:** `^3.7.0` ([package.json:34](/home/daytona/workspace/source/package.json:34))
+
+    Data visualization for the velocity chart on Dashboard:
+
+    ```tsx
+    // src/features/dashboard/VelocityChart.tsx (example pattern)
+    <BarChart data={velocityData}>
+      <Bar dataKey="completion" fill="var(--accent-emerald)" />
+    </BarChart>
+    ```
+  </Accordion>
+
+  <Accordion title="Framer Motion">
+    **Version:** `^12.34.0` ([package.json:28](/home/daytona/workspace/source/package.json:28))
+
+    Smooth animations and transitions:
+
+    ```tsx
+    import { motion } from 'framer-motion';
+
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {content}
+    </motion.div>
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Utilities
+
+**clsx** `^2.1.1` - Conditional className joining
+
+```tsx
+import clsx from 'clsx';
+
+<div className={clsx(
+  styles.task,
+  isCompleted && styles.completed,
+  isHighPriority && styles.priority
+)} />
+```
+
+**tailwind-merge** `^3.4.0` - Smart Tailwind class merging (utility, not using full Tailwind)
+
+**react-markdown** `^10.1.0` - Render markdown content (used in AI Briefing)
+
+## Backend Stack
+
+### Firebase Platform
+
+**Version:** `^12.9.0` ([package.json:27](/home/daytona/workspace/source/package.json:27))
+
+Arre uses Firebase as its complete backend infrastructure:
+
+<Tabs>
+  <Tab title="Authentication">
+    **Module:** `firebase/auth`
+
+    ```tsx
+    // src/lib/firebase.ts:2,21
+    import { getAuth, connectAuthEmulator } from 'firebase/auth';
+    export const auth = getAuth(app);
+    ```
+
+    **Providers:**
+    - Google OAuth (`GoogleAuthProvider`)
+    - Anonymous Auth (`signInAnonymously`)
+    - Account Linking (`linkWithPopup`)
+
+    **Authentication Flow:**
+    ```tsx
+    // src/lib/auth/AuthContext.tsx:38-46
+    const signInWithGoogle = async () => {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    };
+    ```
+  </Tab>
+
+  <Tab title="Firestore">
+    **Module:** `firebase/firestore`
+
+    ```tsx
+    // src/lib/firebase.ts:3,22
+    import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+    export const db = getFirestore(app);
+    ```
+
+    **Key Features:**
+    - Real-time listeners with `onSnapshot()`
+    - Offline persistence enabled by default
+    - Server timestamps for consistency
+    - Composite queries with indexes
+
+    **Example Query:**
+    ```tsx
+    // src/features/tasks/hooks/useTasks.ts:117-124
+    const q = query(
+      tasksRef, 
+      where('date', '==', today), 
+      where('status', '==', 'todo'),
+      orderBy('isEvening', 'asc'),
+      orderBy('createdAt', 'desc')
+    );
+    ```
+  </Tab>
+
+  <Tab title="Cloud Functions">
+    **Module:** `firebase/functions`
+
+    ```tsx
+    // src/lib/firebase.ts:5,24
+    import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+    export const functions = getFunctions(app);
+    ```
+
+    **Invocation:**
+    ```tsx
+    import { httpsCallable } from 'firebase/functions';
+
+    const generateBriefing = httpsCallable(functions, 'generateBriefing');
+    const result = await generateBriefing({ tasks, projects });
+    ```
+  </Tab>
+
+  <Tab title="Cloud Storage">
+    **Module:** `firebase/storage`
+
+    ```tsx
+    // src/lib/firebase.ts:4,23
+    import { getStorage, connectStorageEmulator } from 'firebase/storage';
+    export const storage = getStorage(app);
+    ```
+
+    Used for document uploads in Magic Import feature.
+  </Tab>
+</Tabs>
+
+### Cloud Functions (Backend)
+
+**Runtime:** Node.js 22 ([functions/package.json:12](/home/daytona/workspace/source/functions/package.json:12))
+
+**Dependencies:**
+
+<AccordionGroup>
+  <Accordion title="firebase-admin (^13.6.1)">
+    Server-side Firebase SDK for privileged access:
+
+    ```javascript
+    // functions/index.js:4,10
+    const admin = require("firebase-admin");
+    admin.initializeApp();
+    ```
+  </Accordion>
+
+  <Accordion title="firebase-functions (^7.0.0)">
+    Cloud Functions framework:
+
+    ```javascript
+    // functions/index.js:1
+    const { onCall, HttpsError } = require("firebase-functions/v2/https");
+
+    exports.processMagicImport = onCall({ 
+      secrets: [geminiApiKey],
+      memory: "512MiB",
+      timeoutSeconds: 60
+    }, async (request) => {
+      // Function logic
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="@google/generative-ai (^0.24.1)">
+    **Gemini 2.5 Flash** integration for AI features:
+
+    ```javascript
+    // functions/index.js:18-21
+    const getGeminiModel = (apiKey) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      return genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    };
+    ```
+
+    **Used for:**
+    - Magic Import: Extract tasks from documents
+    - Daily Briefing: Generate personalized summaries
+  </Accordion>
+
+  <Accordion title="pdf-parse (^2.4.5)">
+    Parse PDF files for Magic Import:
+
+    ```javascript
+    // functions/index.js:29-32
+    if (mimeType === 'application/pdf') {
+      const data = await pdf(buffer);
+      return data.text;
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="csv-parse (^6.1.0)">
+    Parse CSV files:
+
+    ```javascript
+    // functions/index.js:34-40
+    if (mimeType === 'text/csv') {
+      const records = parse(buffer.toString('utf-8'), {
+        columns: true,
+        skip_empty_lines: true
+      });
+      return JSON.stringify(records, null, 2);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="googleapis (^171.4.0)">
+    Google Tasks API integration:
+
+    ```javascript
+    // functions/index.js:200
+    return google.tasks({ version: 'v1', auth: oauth2Client });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## AI Integration
+
+### Gemini 2.5 Flash
+
+**Model:** `gemini-2.5-flash` ([functions/index.js:20](/home/daytona/workspace/source/functions/index.js:20))
+
+Google's fast, efficient multimodal AI model:
+
+**Capabilities:**
+- Text generation
+- Document understanding
+- Structured JSON output
+- Large context window (30,000 chars used)
+
+**Implementation:**
+
+```javascript
+// functions/index.js:86-95
+const model = getGeminiModel(geminiApiKey.value());
+const result = await model.generateContent([
+  systemPrompt,
+  { text: `Document Content:\n${extractedText.substring(0, 30000)}` }
+]);
+
+const response = result.response;
+const text = response.text();
+const tasks = JSON.parse(text);
+```
+
+<Note>
+  API keys are stored in Google Cloud Secret Manager and accessed via `defineSecret()` for security.
+</Note>
+
+## OAuth & Integrations
+
+### Google OAuth
+
+**Package:** `@react-oauth/google` `^0.13.4` ([package.json:25](/home/daytona/workspace/source/package.json:25))
+
+Enhanced Google sign-in with additional scopes:
+
+```tsx
+// src/lib/auth/AuthContext.tsx:68-73
+const provider = new GoogleAuthProvider();
+provider.addScope('https://www.googleapis.com/auth/tasks');
+provider.setCustomParameters({
+  prompt: 'consent',
+  access_type: 'offline'
+});
+```
+
+**Why offline access?** To obtain refresh tokens for server-side API calls to Google Tasks.
+
+### Google Tasks API
+
+Integration allows:
+- Fetching task lists
+- Reading tasks
+- Syncing task status
+
+Implemented entirely in Cloud Functions for security (OAuth tokens never exposed to client).
+
+## Testing
+
+### Playwright
+
+**Version:** `^1.58.2` ([package.json:15](/home/daytona/workspace/source/package.json:15))
+
+End-to-end testing framework:
+
+```typescript
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  use: {
+    baseURL: 'http://localhost:5173',
+  },
+});
+```
+
+**Scripts:**
+- `npm test` - Run tests headless
+- `npm run test:ui` - Run tests with UI mode
+
+<Warning>
+  E2E tests should run against Firebase emulators, not production.
+</Warning>
+
+## Development Tools
+
+### Firebase Tools
+
+**Version:** `^15.6.0` ([package.json:20](/home/daytona/workspace/source/package.json:20))
+
+CLI for Firebase development:
+
+```bash
+# Start emulators
+npm run emulators
+
+# Deploy functions
+firebase deploy --only functions
+
+# Deploy hosting
+firebase deploy --only hosting
+```
+
+**Emulator Configuration** ([firebase.json:16-32](/home/daytona/workspace/source/firebase.json:16-32)):
+
+```json
+{
+  "emulators": {
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "ui": { "enabled": true }
+  }
+}
+```
+
+### Build Tools
+
+**@vitejs/plugin-react** `^4.7.0` - Official Vite plugin for React with Fast Refresh
+
+**TypeScript Compiler** - Type checking before build:
+
+```json
+// package.json:8
+"build": "tsc && vite build"
+```
+
+## Version Summary
+
+### Frontend
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| react | 19.2.4 | UI framework |
+| react-dom | 19.2.4 | DOM rendering |
+| react-router-dom | 7.13.0 | Client routing |
+| typescript | 5.9.3 | Type safety |
+| vite | 7.3.1 | Build tool |
+| firebase | 12.9.0 | Backend SDK |
+| framer-motion | 12.34.0 | Animations |
+| lucide-react | 0.564.0 | Icons |
+| recharts | 3.7.0 | Charts |
+| @react-oauth/google | 0.13.4 | Google OAuth |
+| react-markdown | 10.1.0 | Markdown rendering |
+| clsx | 2.1.1 | Classname utility |
+
+### Backend (Cloud Functions)
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| firebase-admin | 13.6.1 | Server SDK |
+| firebase-functions | 7.0.0 | Functions framework |
+| @google/generative-ai | 0.24.1 | Gemini AI |
+| googleapis | 171.4.0 | Google APIs |
+| pdf-parse | 2.4.5 | PDF parsing |
+| csv-parse | 6.1.0 | CSV parsing |
+| google-auth-library | 10.5.0 | OAuth |
+
+### Development
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| @playwright/test | 1.58.2 | E2E testing |
+| firebase-tools | 15.6.0 | Firebase CLI |
+| @types/react | 19.2.14 | React types |
+| @vitejs/plugin-react | 4.7.0 | Vite React plugin |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture Overview" icon="sitemap" href="/development/overview">
+    Understand how these technologies work together
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    See how code is organized in the repository
+  </Card>
+</CardGroup>

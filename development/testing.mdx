@@ -1,0 +1,378 @@
+---
+title: 'Testing'
+description: 'End-to-end testing with Playwright and Firebase Emulators'
+icon: 'flask-vial'
+---
+
+Arre uses **Playwright** for comprehensive end-to-end (E2E) testing across multiple browsers and devices. Tests run against Firebase Emulators to ensure a consistent, reproducible testing environment.
+
+## Overview
+
+The testing infrastructure provides:
+- **Multi-browser coverage**: Chromium, Firefox, and WebKit
+- **Local Firebase Emulators** for Auth and Firestore
+- **Interactive UI mode** for debugging
+- **CI/CD integration** with GitHub Actions
+- **Parallel test execution** for faster feedback
+
+## Getting Started
+
+<Steps>
+  <Step title="Install dependencies">
+    Ensure all project dependencies are installed:
+    
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Install Playwright browsers">
+    Playwright requires its own browser binaries:
+    
+    ```bash
+    npx playwright install
+    ```
+    
+    This downloads Chromium, Firefox, and WebKit test browsers.
+  </Step>
+
+  <Step title="Run tests">
+    Execute the full test suite:
+    
+    ```bash
+    npm test
+    ```
+  </Step>
+</Steps>
+
+## Running Tests
+
+<Tabs>
+  <Tab title="All Tests (Headless)">
+    Run the complete test suite in headless mode:
+    
+    ```bash
+    npx playwright test
+    ```
+    
+    Or use the npm script:
+    
+    ```bash
+    npm test
+    ```
+    
+    This executes all tests across Chromium, Firefox, and WebKit.
+  </Tab>
+
+  <Tab title="Interactive UI Mode">
+    Launch the Playwright UI for interactive debugging:
+    
+    ```bash
+    npx playwright test --ui
+    ```
+    
+    Or via npm:
+    
+    ```bash
+    npm run test:ui
+    ```
+    
+    <Note>
+      UI mode lets you step through tests, inspect DOM state, view network requests, and see console logs in real-time.
+    </Note>
+  </Tab>
+
+  <Tab title="Specific Browser">
+    Run tests on a single browser:
+    
+    ```bash
+    # Chromium only
+    npx playwright test --project=chromium
+    
+    # Firefox only
+    npx playwright test --project=firefox
+    
+    # WebKit only
+    npx playwright test --project=webkit
+    ```
+  </Tab>
+
+  <Tab title="Specific Test File">
+    Run a single test file:
+    
+    ```bash
+    npx playwright test tests/new-task.spec.ts
+    ```
+    
+    Or use grep to filter by test name:
+    
+    ```bash
+    npx playwright test -g "manual task"
+    ```
+  </Tab>
+</Tabs>
+
+## Test Configuration
+
+The Playwright configuration is defined in `playwright.config.ts:6`:
+
+<CodeGroup>
+```typescript playwright.config.ts
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: process.env.CI
+    ? [["html"], ["json", { outputFile: "test-results.json" }]]
+    : "html",
+  
+  use: {
+    baseURL: "http://localhost:5173",
+    trace: "on-first-retry",
+  },
+  
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+  ],
+  
+  webServer: {
+    command: "npm run dev",
+    url: "http://localhost:5173",
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+</CodeGroup>
+
+### Key Configuration Options
+
+| Option | Description |
+|--------|-------------|
+| `baseURL` | `http://localhost:5173` - Vite dev server |
+| `fullyParallel` | Runs test files in parallel for speed |
+| `retries` | 2 retries on CI, 0 locally for faster debugging |
+| `workers` | 1 worker on CI (stability), unlimited locally |
+| `trace` | Captures trace on first retry for debugging |
+| `webServer` | Auto-starts dev server before tests |
+
+<Note>
+  The `webServer` option automatically starts `npm run dev` before running tests and stops it afterward.
+</Note>
+
+## Browser Coverage
+
+Tests run on three major browser engines:
+
+- **Chromium** - Chrome, Edge, Brave, Opera
+- **Firefox** - Firefox
+- **WebKit** - Safari
+
+Mobile viewports are currently disabled to focus on the desktop MVP:
+
+```typescript
+// TEMPORARILY DISABLED: Focusing on Web (Desktop) MVP
+// { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
+// { name: 'Mobile Safari', use: { ...devices['iPhone 12'] } },
+```
+
+## Test Structure
+
+### Test Files
+
+Tests are organized by feature area:
+
+- `tests/new-task.spec.ts` - New Task modal flows
+- `tests/task-actions.spec.ts` - Task operations (complete, reschedule, delete)
+- `tests/project-management.spec.ts` - Project CRUD and organization
+- `tests/logbook.spec.ts` - Logbook view and completed tasks
+- `tests/full-flow.spec.ts` - End-to-end user journeys
+- `tests/utils.ts` - Shared test utilities
+
+### Writing Tests
+
+Use `data-testid` attributes for reliable selectors:
+
+<CodeGroup>
+```tsx Component
+<button data-testid="btn-new-task-main">New Task</button>
+```
+
+```typescript Test
+import { test, expect } from '@playwright/test';
+
+await page.getByTestId('btn-new-task-main').click();
+```
+</CodeGroup>
+
+<Warning>
+  Avoid CSS class selectors or text-based selectors that break when styling or copy changes. Use `data-testid` instead.
+</Warning>
+
+## Test Examples
+
+### Manual Task Creation
+
+From `tests/new-task.spec.ts:45`:
+
+<CodeGroup>
+```typescript tests/new-task.spec.ts
+test('should create a manual task', async ({ page }) => {
+  await openModal(page);
+  await page.getByTestId('tab-manual').click();
+  
+  const taskTitle = 'E2E Test Task ' + Date.now();
+  await page.getByTestId('input-title').fill(taskTitle);
+  
+  // Select energy level
+  const modal = page.getByTestId('new-task-modal');
+  await modal.getByText('high', { exact: true }).click();
+  
+  await page.getByTestId('btn-create-task').click();
+  
+  // Verify task appears in list
+  await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 10000 });
+});
+```
+</CodeGroup>
+
+### Full User Journey
+
+From `tests/full-flow.spec.ts:38`:
+
+<CodeGroup>
+```typescript tests/full-flow.spec.ts
+test('should support the full task lifecycle across views', async ({ page }) => {
+  // 1. Navigate to Upcoming
+  await page.goto('/upcoming');
+  await expect(page).toHaveURL('/upcoming');
+  
+  // 2. Create a task for tomorrow
+  await openNewTaskModal(page);
+  await page.getByTestId('tab-manual').click();
+  
+  const tomorrowTask = 'Meeting with Team ' + Date.now();
+  await page.getByTestId('input-title').fill(tomorrowTask);
+  
+  // Set date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+  await page.locator('input[type="date"]').fill(dateStr);
+  
+  await page.getByTestId('btn-create-task').click();
+  
+  // 3. Verify it appears in Upcoming
+  await expect(page.getByText(tomorrowTask)).toBeVisible({ timeout: 10000 });
+});
+```
+</CodeGroup>
+
+### Test Utilities
+
+Shared utilities in `tests/utils.ts:3`:
+
+<CodeGroup>
+```typescript tests/utils.ts
+export async function login(page: Page) {
+  await page.goto('/login');
+  await page.getByTestId('dev-login-button').click();
+  // Wait for redirect to dashboard
+  await expect(page).toHaveURL('/');
+}
+```
+</CodeGroup>
+
+## Firebase Emulator Integration
+
+Tests run against Firebase Emulators for:
+- **Authentication** - Anonymous dev login
+- **Firestore** - Isolated test database
+
+### Emulator Configuration
+
+In CI, tests start emulators automatically:
+
+```bash
+CI=true npx firebase emulators:exec "npx playwright test" --project demo-test
+```
+
+Environment variables for emulator mode:
+
+```bash
+VITE_FIREBASE_API_KEY="demo-api-key"
+VITE_FIREBASE_AUTH_DOMAIN="demo-test.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="demo-test"
+```
+
+<Note>
+  The emulator provides a clean, isolated environment for each test run. Data is ephemeral and discarded after tests complete.
+</Note>
+
+## Debugging Failed Tests
+
+<Steps>
+  <Step title="Check test output">
+    Playwright displays detailed error messages:
+    
+    ```bash
+    Error: locator.click: Timeout 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for getByTestId('btn-create-task')
+    ```
+  </Step>
+
+  <Step title="View trace files">
+    Traces are captured on first retry. Open them with:
+    
+    ```bash
+    npx playwright show-trace trace.zip
+    ```
+    
+    This shows:
+    - Screenshot at each step
+    - DOM snapshot
+    - Network requests
+    - Console logs
+  </Step>
+
+  <Step title="Use UI mode for live debugging">
+    Run tests interactively:
+    
+    ```bash
+    npm run test:ui
+    ```
+    
+    Step through actions, pause execution, and inspect state.
+  </Step>
+</Steps>
+
+## CI Integration
+
+Tests run automatically on every pull request via the AI QA Agent workflow. See the [CI/CD documentation](/development/ci-cd) for details.
+
+<Note>
+  On CI, tests run in Chromium only with 2 retries for flaky test resilience.
+</Note>
+
+## Best Practices
+
+1. **Use data-testid for selectors** - Avoid brittle CSS or text selectors
+2. **Wait for async operations** - Use `expect().toBeVisible({ timeout: 10000 })` for Firestore sync
+3. **Generate unique test data** - Use `Date.now()` to avoid conflicts
+4. **Clean up test state** - Firebase emulators reset between runs automatically
+5. **Test user journeys, not implementation** - Focus on what users do, not how code works
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CI/CD Pipeline" icon="circle-nodes" href="/development/ci-cd">
+    Learn how tests integrate with GitHub Actions and the AI QA Agent
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/development/deployment">
+    Deploy to Firebase Hosting after tests pass
+  </Card>
+</CardGroup>

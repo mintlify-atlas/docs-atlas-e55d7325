@@ -1,0 +1,538 @@
+---
+title: 'Deployment'
+description: 'Deploy to Firebase Hosting and manage production environments'
+icon: 'rocket'
+---
+
+Arre is deployed to Firebase Hosting with automated CI/CD via GitHub Actions. This guide covers manual deployment, environment configuration, and production operations.
+
+## Deployment Architecture
+
+The application uses a dual-environment strategy:
+
+| Environment | URL | Purpose | Data |
+|-------------|-----|---------|------|
+| **Development** | `arre-app-dev.web.app` | Staging/testing | Test data, wiped frequently |
+| **Production** | `arre.app` (planned) | Live users | Real user data, backed up |
+
+<Note>
+  Currently, all deployments go to `arre-app-dev`. A separate production project is planned for future phases.
+</Note>
+
+## Prerequisites
+
+Before deploying, ensure you have:
+
+<Steps>
+  <Step title="Firebase CLI installed">
+    ```bash
+    npm install -g firebase-tools
+    ```
+  </Step>
+
+  <Step title="Firebase authentication">
+    ```bash
+    firebase login
+    ```
+  </Step>
+
+  <Step title="Environment variables configured">
+    Create a `.env` file in the project root:
+    
+    ```bash .env
+    VITE_FIREBASE_API_KEY=AIzaSy...
+    VITE_FIREBASE_AUTH_DOMAIN=arre-app-dev.firebaseapp.com
+    VITE_FIREBASE_PROJECT_ID=arre-app-dev
+    VITE_FIREBASE_STORAGE_BUCKET=arre-app-dev.appspot.com
+    VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+    VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+    ```
+    
+    <Warning>
+      Never commit `.env` to version control. Add it to `.gitignore`.
+    </Warning>
+  </Step>
+</Steps>
+
+## Manual Deployment
+
+### Full Deployment (Frontend + Backend)
+
+Deploy the complete application including Firestore rules, Cloud Functions, and Hosting:
+
+<Steps>
+  <Step title="Install dependencies">
+    ```bash
+    npm ci
+    cd functions && npm ci && cd ..
+    ```
+  </Step>
+
+  <Step title="Build the application">
+    ```bash
+    npm run build
+    ```
+    
+    This compiles the Vite app to the `dist/` directory with production optimizations.
+  </Step>
+
+  <Step title="Deploy to Firebase">
+    ```bash
+    firebase deploy
+    ```
+    
+    This deploys:
+    - Firestore security rules
+    - Firestore indexes
+    - Cloud Functions (`processMagicImport`)
+    - Firebase Hosting (static assets)
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Output">
+    ```bash
+    === Deploying to 'arre-app-dev'...
+    
+    i  deploying firestore, functions, hosting
+    i  firestore: checking rules for compilation errors...
+    ✔  firestore: rules file firestore.rules compiled successfully
+    i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
+    ✔  functions: required API cloudfunctions.googleapis.com is enabled
+    i  functions: preparing functions directory for uploading...
+    i  functions: packaged functions (45.2 KB) for uploading
+    ✔  functions: functions folder uploaded successfully
+    i  hosting[arre-app-dev]: beginning deploy...
+    i  hosting[arre-app-dev]: found 25 files in dist
+    ✔  hosting[arre-app-dev]: file upload complete
+    ✔  hosting[arre-app-dev]: version finalized
+    ✔  hosting[arre-app-dev]: release complete
+    
+    ✔  Deploy complete!
+    
+    Project Console: https://console.firebase.google.com/project/arre-app-dev
+    Hosting URL: https://arre-app-dev.web.app
+    ```
+  </Tab>
+
+  <Tab title="Selective Deployment">
+    Deploy only specific services:
+    
+    **Hosting only**:
+    ```bash
+    firebase deploy --only hosting
+    ```
+    
+    **Functions only**:
+    ```bash
+    firebase deploy --only functions
+    ```
+    
+    **Firestore rules only**:
+    ```bash
+    firebase deploy --only firestore:rules
+    ```
+    
+    **Multiple services**:
+    ```bash
+    firebase deploy --only firestore,functions
+    ```
+  </Tab>
+</Tabs>
+
+### Production Build Process
+
+The build command runs Vite with production optimizations:
+
+```bash
+npm run build
+```
+
+This performs:
+- **Code minification** - Reduces bundle size
+- **Tree shaking** - Removes unused code
+- **Asset optimization** - Compresses images and fonts
+- **Code splitting** - Creates efficient chunks
+- **Environment injection** - Embeds `VITE_*` variables
+
+<CodeGroup>
+```json package.json
+{
+  "scripts": {
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+```typescript vite.config.ts
+export default defineConfig({
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+        }
+      }
+    }
+  }
+});
+```
+</CodeGroup>
+
+## Environment Configuration
+
+### Local Development
+
+Uses `.env` file (not committed to git):
+
+```bash .env
+VITE_FIREBASE_API_KEY=AIzaSy...
+VITE_FIREBASE_AUTH_DOMAIN=arre-app-dev.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=arre-app-dev
+```
+
+### CI/CD (GitHub Actions)
+
+Uses GitHub Secrets injected at build time:
+
+```yaml
+- name: Build
+  run: npm run build
+  env:
+    VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+    VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+    VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+```
+
+### How Vite Injects Variables
+
+Vite embeds environment variables at build time:
+
+<CodeGroup>
+```typescript src/config/firebase.ts
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+};
+```
+
+```javascript dist/assets/index-abc123.js (after build)
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "arre-app-dev.firebaseapp.com",
+  projectId: "arre-app-dev"
+};
+```
+</CodeGroup>
+
+<Warning>
+  Only variables prefixed with `VITE_` are exposed to the client. Server-side secrets (like `GEMINI_API_KEY`) must use Cloud Functions.
+</Warning>
+
+## Secret Management
+
+### GitHub Secrets
+
+Store sensitive values in GitHub repository settings:
+
+<Steps>
+  <Step title="Navigate to Settings">
+    Repository > **Settings** > **Secrets and variables** > **Actions**
+  </Step>
+
+  <Step title="Add secrets">
+    Required secrets:
+    
+    | Secret Name | Description |
+    |-------------|-------------|
+    | `VITE_FIREBASE_API_KEY` | Firebase API key |
+    | `VITE_FIREBASE_AUTH_DOMAIN` | Auth domain |
+    | `VITE_FIREBASE_PROJECT_ID` | Project ID |
+    | `VITE_FIREBASE_STORAGE_BUCKET` | Storage bucket |
+    | `VITE_FIREBASE_MESSAGING_SENDER_ID` | FCM sender ID |
+    | `VITE_FIREBASE_APP_ID` | App ID |
+    | `FIREBASE_SERVICE_ACCOUNT_ARRE_APP_DEV` | Service account JSON |
+    | `GEMINI_API_KEY` | AI QA agent key |
+  </Step>
+</Steps>
+
+### Firebase Service Account
+
+Generate a service account for CI/CD:
+
+<Steps>
+  <Step title="Open Firebase Console">
+    Go to [Firebase Console](https://console.firebase.google.com/project/arre-app-dev/settings/serviceaccounts)
+  </Step>
+
+  <Step title="Generate new key">
+    - Click **Generate new private key**
+    - Download the JSON file
+  </Step>
+
+  <Step title="Add to GitHub Secrets">
+    - Copy the entire JSON content
+    - Add as `FIREBASE_SERVICE_ACCOUNT_ARRE_APP_DEV`
+  </Step>
+</Steps>
+
+## Firebase Console Operations
+
+### View Deployment Status
+
+<Steps>
+  <Step title="Open Firebase Console">
+    Navigate to [Firebase Console - Arre App Dev](https://console.firebase.google.com/project/arre-app-dev)
+  </Step>
+
+  <Step title="Check Hosting">
+    **Build** > **Hosting** > **Release history**
+    
+    View:
+    - Current live version
+    - Deployment timestamp
+    - Deployed files
+    - Rollback options
+  </Step>
+
+  <Step title="Check Functions">
+    **Build** > **Functions**
+    
+    View:
+    - Function execution logs
+    - Invocation count
+    - Error rates
+  </Step>
+</Steps>
+
+### Authentication Setup
+
+Enable sign-in methods:
+
+<Steps>
+  <Step title="Enable providers">
+    **Build** > **Authentication** > **Sign-in method**
+    
+    Enable:
+    - **Google** (requires support email)
+    - **Anonymous** (for dev login)
+  </Step>
+
+  <Step title="Add authorized domains">
+    **Build** > **Authentication** > **Settings** > **Authorized domains**
+    
+    Add:
+    - `arre-app-dev.web.app`
+    - `arre-app-dev.firebaseapp.com`
+    - `localhost` (for development)
+  </Step>
+</Steps>
+
+<Note>
+  Without authorized domains, OAuth sign-in will fail with `auth/unauthorized-domain`.
+</Note>
+
+## Production Deployment Strategy
+
+### Recommended: Dual-Project Setup
+
+For robust production operations:
+
+<Tabs>
+  <Tab title="Development">
+    **Project**: `arre-app-dev`
+    
+    - **URL**: `arre-app-dev.web.app`
+    - **Purpose**: Staging, testing, demo
+    - **Data**: Test data, frequently wiped
+    - **Deploy**: On every merge to `main`
+  </Tab>
+
+  <Tab title="Production">
+    **Project**: `arre-app-prod` (planned)
+    
+    - **URL**: `arre.app` (custom domain)
+    - **Purpose**: Live users
+    - **Data**: Real user data, backed up
+    - **Deploy**: On release tags only
+  </Tab>
+</Tabs>
+
+### Release Workflow
+
+<Steps>
+  <Step title="Develop and test">
+    Work in feature branches, merge to `main` after PR approval
+  </Step>
+
+  <Step title="Auto-deploy to dev">
+    GitHub Actions deploys to `arre-app-dev.web.app` on merge
+  </Step>
+
+  <Step title="Create release tag">
+    ```bash
+    git tag -a v1.0.0 -m "Release v1.0.0"
+    git push origin v1.0.0
+    ```
+  </Step>
+
+  <Step title="Deploy to production">
+    GitHub Actions deploys to `arre-app-prod` on tag push
+  </Step>
+</Steps>
+
+## Rollback
+
+Firebase Hosting retains deployment history for easy rollback:
+
+<Steps>
+  <Step title="Open Firebase Console">
+    [Firebase Console > Hosting](https://console.firebase.google.com/project/arre-app-dev/hosting)
+  </Step>
+
+  <Step title="Select previous release">
+    Click on the stable version in **Release history**
+  </Step>
+
+  <Step title="Rollback">
+    Click **Rollback** to restore the previous version
+  </Step>
+</Steps>
+
+<Note>
+  Rollbacks take effect immediately without requiring a rebuild.
+</Note>
+
+## Cost Control
+
+### Pause Deployment
+
+To stop consumption while keeping data:
+
+<Tabs>
+  <Tab title="Disable Hosting">
+    ```bash
+    firebase hosting:disable
+    ```
+    
+    Stops public access and bandwidth costs.
+  </Tab>
+
+  <Tab title="Delete Functions">
+    ```bash
+    firebase functions:delete processMagicImport --region us-central1
+    ```
+    
+    Stops compute costs for AI processing.
+  </Tab>
+</Tabs>
+
+### Downgrade Plan
+
+<Steps>
+  <Step title="Open billing settings">
+    **Project Overview** > **Usage and billing**
+  </Step>
+
+  <Step title="Switch plan">
+    Change from **Blaze (Pay as you go)** to **Spark (Free)**
+  </Step>
+
+  <Step title="Understand limitations">
+    Free tier limits:
+    - No Cloud Functions
+    - 1GB Hosting bandwidth/day
+    - 10GB Firestore storage
+  </Step>
+</Steps>
+
+### Delete Project
+
+<Warning>
+  This permanently deletes all data after 30 days.
+</Warning>
+
+<Steps>
+  <Step title="Open project settings">
+    **Project Settings** (gear icon)
+  </Step>
+
+  <Step title="Delete project">
+    Scroll to bottom > **Delete project**
+  </Step>
+
+  <Step title="Recovery period">
+    30-day grace period to restore before permanent deletion
+  </Step>
+</Steps>
+
+## Monitoring
+
+### Function Logs
+
+View Cloud Function execution:
+
+```bash
+firebase functions:log --only processMagicImport
+```
+
+Or in Firebase Console:
+- **Build** > **Functions** > `processMagicImport` > **Logs**
+
+### Hosting Metrics
+
+View bandwidth and request metrics:
+- **Build** > **Hosting** > **Usage**
+
+### Firestore Usage
+
+Monitor read/write operations:
+- **Build** > **Firestore Database** > **Usage**
+
+## Troubleshooting
+
+### Authentication Fails
+
+**Error**: `auth/unauthorized-domain`
+
+**Fix**: Add domain to authorized domains:
+- Firebase Console > **Authentication** > **Settings** > **Authorized domains**
+
+### Build Fails
+
+**Error**: `import.meta.env.VITE_FIREBASE_API_KEY is undefined`
+
+**Fix**: Ensure `.env` file exists with all required variables
+
+### Deployment Fails
+
+**Error**: `HTTP Error: 403, The caller does not have permission`
+
+**Fix**: Re-authenticate with Firebase CLI:
+```bash
+firebase logout
+firebase login
+```
+
+### Function Cold Starts
+
+**Issue**: First function invocation is slow (5-10 seconds)
+
+**Solution**: Accept as normal Firebase behavior, or upgrade to always-on instances (paid)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Testing" icon="flask-vial" href="/development/testing">
+    Write and run Playwright E2E tests
+  </Card>
+  <Card title="CI/CD Pipeline" icon="circle-nodes" href="/development/ci-cd">
+    Understand automated workflows and AI QA agent
+  </Card>
+</CardGroup>

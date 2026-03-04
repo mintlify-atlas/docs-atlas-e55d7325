@@ -1,0 +1,194 @@
+---
+title: 'Projects'
+description: 'Organize related tasks into color-coded projects for better clarity and focus'
+icon: 'folder'
+---
+
+## Overview
+
+Projects help you group related tasks together. Each project has a name and color, making it easy to visually identify which tasks belong to which area of your life or work.
+
+## Creating Projects
+
+1. Click the **New Project** button in the sidebar or settings
+2. Enter a project name (e.g., "Work", "Personal", "Side Project")
+3. Choose a color from the palette
+4. Click **Create**
+
+**Reference**: `ProjectModal.tsx:33-37`
+
+<Note>
+  You can press `Enter` after typing the project name to save quickly without clicking the Create button.
+</Note>
+
+## Project Colors
+
+Arre provides 10 vibrant colors to choose from:
+
+<CardGroup cols={5}>
+  <Card title="Emerald" icon="circle" iconType="solid" color="#10b981">
+    Default color
+  </Card>
+  <Card title="Sapphire" icon="circle" iconType="solid" color="#2563eb">
+    Professional blue
+  </Card>
+  <Card title="Ruby" icon="circle" iconType="solid" color="#dc2626">
+    High priority red
+  </Card>
+  <Card title="Lavender" icon="circle" iconType="solid" color="#7c3aed">
+    Creative purple
+  </Card>
+  <Card title="Gold" icon="circle" iconType="solid" color="#f59e0b">
+    Important gold
+  </Card>
+  <Card title="Cyan" icon="circle" iconType="solid" color="#06b6d4">
+    Fresh cyan
+  </Card>
+  <Card title="Rose" icon="circle" iconType="solid" color="#f43f5e">
+    Warm rose
+  </Card>
+  <Card title="Amber" icon="circle" iconType="solid" color="#d97706">
+    Rich amber
+  </Card>
+  <Card title="Teal" icon="circle" iconType="solid" color="#14b8a6">
+    Calm teal
+  </Card>
+  <Card title="Indigo" icon="circle" iconType="solid" color="#6366f1">
+    Deep indigo
+  </Card>
+</CardGroup>
+
+**Reference**: `task.ts:19-30`
+
+## Assigning Tasks to Projects
+
+When creating or editing a task:
+
+1. Click the **Project** dropdown (folder icon)
+2. Select a project from the list
+3. A colored indicator appears next to the dropdown when a project is selected
+
+To remove a task from a project, select "No Project" from the dropdown.
+
+**Reference**: `TaskEditorModal.tsx:221-248`
+
+## Viewing Project Groups
+
+Tasks assigned to projects are automatically grouped in two views:
+
+### Anytime View
+All undated tasks are organized by project. Each project shows:
+- Project name with colored dot
+- Task count
+- All tasks belonging to that project
+
+Tasks without projects appear under "Single Actions" at the bottom.
+
+**Reference**: `Anytime.tsx:64-83`
+
+### Someday View
+Someday tasks are also grouped by project, with unassigned tasks appearing under "Loose Ideas".
+
+**Reference**: `Someday.tsx:62-80`
+
+<Tabs>
+  <Tab title="With Projects">
+    ```
+    Anytime
+    ────────────────────────
+    🟢 Work (5 tasks)
+      □ Review pull requests
+      □ Update documentation
+      □ Schedule team meeting
+      □ Prepare Q4 presentation
+      □ Respond to client emails
+
+    🔵 Personal (3 tasks)
+      □ Book dentist appointment
+      □ Research vacation destinations
+      □ Call insurance company
+    ```
+  </Tab>
+
+  <Tab title="Without Projects">
+    ```
+    Anytime
+    ────────────────────────
+    □ Review pull requests
+    □ Update documentation
+    □ Book dentist appointment
+    □ Schedule team meeting
+    □ Research vacation destinations
+    □ Prepare Q4 presentation
+    □ Call insurance company
+    □ Respond to client emails
+    ```
+  </Tab>
+</Tabs>
+
+## Editing Projects
+
+1. Click on a project in your project list
+2. Modify the name or color
+3. Click **Save**
+
+Changes apply immediately to all tasks assigned to that project.
+
+**Reference**: `ProjectModal.tsx:22-31`
+
+## Deleting Projects
+
+1. Open the project editor
+2. Click the **Delete** button (trash icon)
+3. Confirm the deletion
+
+<Warning>
+  When you delete a project, tasks assigned to it become unassigned. They won't be deleted, but they'll appear under "Single Actions" or "Loose Ideas" instead of under the project name.
+</Warning>
+
+**Reference**: `ProjectModal.tsx:39-45`
+
+## Project Indicators
+
+Projects are visually indicated throughout Arre:
+
+- **Task cards**: Show a colored dot and project name badge
+- **Project groups**: Display a large colored dot next to the project title
+- **Task editor**: Shows a colored indicator when a project is selected
+
+**Reference**: `TaskItem.tsx:69-77, TaskEditorModal.tsx:237-246`
+
+## Best Practices
+
+<Accordion title="How many projects should I create?">
+  Start with 3-5 main areas of your life (e.g., Work, Personal, Health, Side Projects). Too many projects can be overwhelming. You can always add more later as needed.
+</Accordion>
+
+<Accordion title="Should I use projects or tags?">
+  Use **projects** for ongoing areas with multiple related tasks (e.g., "Website Redesign"). Use **tags** for cross-cutting attributes (e.g., "urgent", "waiting"). A task can have both a project and multiple tags.
+</Accordion>
+
+<Accordion title="How do I choose project colors?">
+  Pick colors that feel intuitive to you. Many people use:
+  - Blue/Sapphire for professional work
+  - Green/Emerald for personal tasks
+  - Red/Ruby for urgent or important projects
+  - Purple/Lavender for creative work
+
+  There's no right answer - choose what helps you identify projects at a glance.
+</Accordion>
+
+<Accordion title="Can I reorder projects?">
+  Projects are automatically ordered by creation date. The grouping in Anytime/Someday views follows this order.
+</Accordion>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Task Management" icon="check-circle" href="/features/task-management">
+    Learn how to create and organize tasks
+  </Card>
+  <Card title="Energy Filtering" icon="zap" href="/features/energy-filtering">
+    Filter tasks by energy level within projects
+  </Card>
+</CardGroup>
