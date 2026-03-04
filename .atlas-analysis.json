@@ -1,0 +1,91 @@
+{
+  "projectType": "saas",
+  "projectName": "Arre",
+  "projectDescription": "A modern, minimalist productivity application with AI-powered task management, deep work analytics, and energy-based workflow optimization.",
+  "theme": "palm",
+  "primaryColor": "#848c8e",
+  "lightColor": "#11161e",
+  "darkColor": "#cfd0d2",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart", "installation"]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/task-management",
+              "features/projects",
+              "features/ai-import",
+              "features/productivity-metrics",
+              "features/energy-filtering"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/inbox",
+              "guide/planning-views",
+              "guide/logbook",
+              "guide/themes"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": [
+              "development/overview",
+              "development/tech-stack",
+              "development/project-structure"
+            ]
+          },
+          {
+            "group": "Backend",
+            "pages": [
+              "development/firebase-setup",
+              "development/firestore-schema",
+              "development/cloud-functions",
+              "development/security-rules"
+            ]
+          },
+          {
+            "group": "Testing & Deployment",
+            "pages": [
+              "development/testing",
+              "development/ci-cd",
+              "development/deployment"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI-powered document import with Gemini 2.5",
+    "Energy-based task filtering (low/neutral/high focus)",
+    "Real-time productivity metrics and velocity tracking",
+    "Project management with color-coded organization",
+    "Deep work dashboard with focus analytics",
+    "Multi-view planning (Today, Upcoming, Anytime, Someday, Logbook)",
+    "Firebase-backed real-time synchronization",
+    "Responsive design with mobile bottom navigation"
+  ],
+  "publicApiSurface": [
+    "processMagicImport - Cloud Function for AI task extraction from documents",
+    "TaskDocument interface - Firestore task schema",
+    "ProjectDocument interface - Firestore project schema",
+    "useTasks hook - Real-time task state management",
+    "useProjects hook - Real-time project state management",
+    "TaskEditorModal component - Task creation and editing",
+    "ProjectModal component - Project CRUD operations",
+    "Firebase Authentication with Google OAuth"
+  ]
+}
