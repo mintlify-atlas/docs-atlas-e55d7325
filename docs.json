@@ -38,6 +38,7 @@
               "features/task-management",
               "features/projects",
               "features/ai-import",
+              "features/ai-briefing",
               "features/productivity-metrics",
               "features/energy-filtering"
             ]
@@ -48,7 +49,8 @@
               "guide/inbox",
               "guide/planning-views",
               "guide/logbook",
-              "guide/themes"
+              "guide/themes",
+              "guide/settings"
             ]
           }
         ]

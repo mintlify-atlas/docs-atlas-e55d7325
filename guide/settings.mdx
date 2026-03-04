@@ -1,0 +1,274 @@
+---
+title: Settings
+description: Configure integrations and manage your Arre account
+icon: gear
+---
+
+## Overview
+
+The Settings page allows you to manage integrations with external services and configure your Arre account. Currently, the primary feature is **Google Tasks integration**, which enables bidirectional sync between Arre and your Google Tasks lists.
+
+<Note>
+  Access Settings by clicking the **Settings** icon in the sidebar navigation.
+</Note>
+
+## Google Tasks integration
+
+Connect your Google Tasks account to sync tasks between Arre and Google Tasks. This integration uses OAuth 2.0 for secure authentication and proxies requests through Firebase Cloud Functions.
+
+<Info>
+  Arre does not store your Google Tasks data. All requests are proxied directly to Google's API, ensuring your data remains private.
+</Info>
+
+### How to connect
+
+<Steps>
+  <Step title="Open Settings">
+    Navigate to **Settings** from the sidebar menu.
+  </Step>
+
+  <Step title="Click Connect Google Tasks">
+    In the **Integrations** section, click the **Connect Google Tasks** button.
+
+    You'll be redirected to Google's OAuth consent screen.
+  </Step>
+
+  <Step title="Grant permissions">
+    Authorize Arre to access your Google Tasks:
+    - **View tasks**: Read your task lists and tasks
+    - **Manage tasks**: Create, update, and complete tasks
+    - **View task lists**: Access all your task lists
+
+    <Warning>
+      Arre requires these permissions to sync tasks bidirectionally. Without them, the integration cannot function.
+    </Warning>
+  </Step>
+
+  <Step title="Confirm connection">
+    After authorization, you'll be redirected back to Settings. The button will change to **Disconnect**, confirming a successful connection.
+  </Step>
+</Steps>
+
+### What gets synced
+
+The Google Tasks integration provides access to:
+
+<CardGroup cols={2}>
+  <Card title="Task Lists" icon="list">
+    Fetch all your Google Tasks lists (e.g., "My Tasks", "Work", "Personal")
+  </Card>
+  <Card title="Tasks" icon="check-square">
+    Read tasks from any list, including completed and hidden tasks
+  </Card>
+  <Card title="Task Updates" icon="pen-to-square">
+    Update task status, title, notes, and due dates
+  </Card>
+  <Card title="Real-time Sync" icon="arrows-rotate">
+    Changes made in Arre are immediately reflected in Google Tasks
+  </Card>
+</CardGroup>
+
+<Note>
+  The integration does **not** automatically import Google Tasks into Arre. It provides API access for you to manually fetch and sync tasks as needed.
+</Note>
+
+### Available Cloud Functions
+
+Once connected, three Cloud Functions become available:
+
+#### getGoogleTaskLists
+
+Fetches all task lists for the authenticated user.
+
+```typescript
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
+const getTaskLists = httpsCallable(functions, 'getGoogleTaskLists');
+
+const response = await getTaskLists();
+const { lists } = response.data;
+```
+
+<ResponseField name="lists" type="TaskList[]">
+  Array of Google Tasks lists:
+  ```json
+  [
+    {
+      "id": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTA",
+      "title": "My Tasks",
+      "updated": "2026-03-04T10:30:00.000Z"
+    }
+  ]
+  ```
+</ResponseField>
+
+#### getGoogleTasks
+
+Fetches tasks from a specific list.
+
+```typescript
+const getTasks = httpsCallable(functions, 'getGoogleTasks');
+
+const response = await getTasks({
+  listId: 'MTIzNDU2Nzg5MDEyMzQ1Njc4OTA',
+  showCompleted: true,
+  showHidden: true
+});
+
+const { tasks } = response.data;
+```
+
+<ParamField path="listId" type="string" required>
+  Google Tasks list ID
+</ParamField>
+
+<ParamField path="showCompleted" type="boolean" default={true}>
+  Include completed tasks in results
+</ParamField>
+
+<ParamField path="showHidden" type="boolean" default={true}>
+  Include hidden tasks in results
+</ParamField>
+
+#### updateGoogleTask
+
+Updates a task's properties.
+
+```typescript
+const updateTask = httpsCallable(functions, 'updateGoogleTask');
+
+const response = await updateTask({
+  listId: 'MTIzNDU2Nzg5MDEyMzQ1Njc4OTA',
+  taskId: 'MDk4NzY1NDMyMTEyMzQ1Njc4OTA',
+  taskPayload: {
+    title: 'Updated task title',
+    status: 'completed',
+    notes: 'Task notes'
+  }
+});
+```
+
+<ParamField path="listId" type="string" required>
+  Google Tasks list ID
+</ParamField>
+
+<ParamField path="taskId" type="string" required>
+  Task ID to update
+</ParamField>
+
+<ParamField path="taskPayload" type="object" required>
+  Partial task object with fields to update:
+  - `title` - Task title
+  - `status` - "needsAction" or "completed"
+  - `notes` - Task description
+  - `due` - Due date in RFC 3339 format
+</ParamField>
+
+### How to disconnect
+
+If you want to revoke Arre's access to Google Tasks:
+
+<Steps>
+  <Step title="Open Settings">
+    Navigate to **Settings** from the sidebar.
+  </Step>
+
+  <Step title="Click Disconnect">
+    In the Google Tasks integration card, click **Disconnect**.
+
+    Your OAuth tokens will be removed from Firestore.
+  </Step>
+
+  <Step title="Revoke permissions (optional)">
+    To completely revoke access, visit [Google Account Permissions](https://myaccount.google.com/permissions) and remove Arre from the list of connected apps.
+  </Step>
+</Steps>
+
+## Data privacy
+
+<Warning>
+  **Important**: Arre stores OAuth tokens in Firestore under `users/{uid}/integrations/googleTasks`. These tokens are used to authenticate API requests on your behalf.
+</Warning>
+
+**What's stored:**
+- OAuth access token (encrypted by Firebase)
+- OAuth refresh token (encrypted by Firebase)
+- Token expiration timestamp
+
+**What's NOT stored:**
+- Your Google Tasks data (tasks, lists, notes)
+- Task completion history
+- Google account password
+
+All task data is fetched in real-time from Google's API and never persisted in Arre's database.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection fails with 'Failed to connect' error">
+    **Possible causes:**
+    - Google OAuth secrets not configured in Firebase Secret Manager
+    - Invalid redirect URI in Google Cloud Console
+    - Insufficient permissions granted during OAuth flow
+
+    **Solution:**
+    - Verify `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in Firebase
+    - Ensure redirect URI matches your Firebase Auth domain
+    - Try disconnecting and reconnecting to re-authorize
+  </Accordion>
+
+  <Accordion title="API calls fail after connecting">
+    **Possible causes:**
+    - OAuth token expired (tokens are valid for 1 hour)
+    - Google Tasks API not enabled in Google Cloud Console
+    - Network connectivity issues
+
+    **Solution:**
+    - Disconnect and reconnect to refresh tokens
+    - Enable Google Tasks API in your Google Cloud project
+    - Check browser console for detailed error messages
+  </Accordion>
+
+  <Accordion title="Want to add more integrations?">
+    The Settings page architecture supports multiple integrations. To add a new service:
+
+    1. Create Cloud Functions for the new API
+    2. Add OAuth flow in `AuthContext.tsx`
+    3. Add integration card to `Settings.tsx`
+    4. Update Firestore security rules for the new collection
+
+    See [Cloud Functions documentation](/development/cloud-functions) for examples.
+  </Accordion>
+</AccordionGroup>
+
+## Technical implementation
+
+The Settings feature uses:
+
+- **Frontend**: `src/pages/Settings.tsx` - React component
+- **Auth Context**: `src/lib/auth/AuthContext.tsx` - OAuth methods
+- **Cloud Functions**: `functions/index.js` - `getGoogleTaskLists`, `getGoogleTasks`, `updateGoogleTask`
+- **Firestore**: `users/{uid}/integrations/googleTasks` - Token storage
+
+For developer details, see:
+- [Cloud Functions reference](/development/cloud-functions)
+- [Firebase Setup](/development/firebase-setup)
+- [Security Rules](/development/security-rules)
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Themes" icon="palette" href="/guide/themes">
+    Switch between light and dark mode
+  </Card>
+  <Card title="Cloud Functions" icon="cloud" href="/development/cloud-functions">
+    Technical details on integration APIs
+  </Card>
+  <Card title="Firebase Setup" icon="fire" href="/development/firebase-setup">
+    Configure OAuth secrets
+  </Card>
+  <Card title="Security Rules" icon="shield" href="/development/security-rules">
+    Firestore access control
+  </Card>
+</CardGroup>

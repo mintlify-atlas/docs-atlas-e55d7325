@@ -1,0 +1,215 @@
+---
+title: AI briefing
+description: Get a personalized daily overview powered by Gemini AI
+icon: sparkles
+---
+
+## What is AI Briefing?
+
+AI Briefing is an intelligent summary feature that analyzes your tasks and projects to provide a personalized overview of your day. Powered by **Gemini 2.5 Flash**, it helps you start your day with clarity by highlighting priorities, deadlines, and workload balance.
+
+<Note>
+  Access AI Briefing from the sidebar navigation or by clicking the **Briefing** link in the main menu.
+</Note>
+
+## How it works
+
+The AI Briefing feature:
+
+1. **Collects your data** - Gathers all active tasks and projects from Firestore
+2. **Sends to Gemini** - Forwards anonymized task data to Google's Gemini 2.5 Flash model
+3. **Generates insights** - AI analyzes patterns, priorities, and workload distribution
+4. **Returns markdown** - Delivers a formatted briefing with sections and bullet points
+
+<Steps>
+  <Step title="Navigate to Briefing">
+    Click **Briefing** in the sidebar navigation to open the AI Briefing page.
+  </Step>
+
+  <Step title="Generate your briefing">
+    Click the **Generate Briefing** button to create your personalized summary.
+
+    The AI will analyze:
+    - All active tasks across all views (Today, Upcoming, Anytime, Someday)
+    - Your projects and their associated tasks
+    - Task energy levels and completion status
+    - Current time and date for context
+  </Step>
+
+  <Step title="Review your insights">
+    Your briefing appears as formatted markdown content with:
+    - **Today's priorities** - What needs attention now
+    - **Upcoming deadlines** - Tasks with dates approaching
+    - **Energy recommendations** - Suggested focus based on task energy levels
+    - **Project balance** - Distribution of work across projects
+    - **Quick wins** - Low-energy tasks you can complete easily
+  </Step>
+
+  <Step title="Regenerate as needed">
+    Click **Regenerate Briefing** to get a fresh analysis if your task list changes throughout the day.
+  </Step>
+</Steps>
+
+## What the AI analyzes
+
+The `generateBriefing` Cloud Function sends the following data to Gemini:
+
+<ParamField path="tasks" type="Task[]">
+  Array of all active tasks with properties:
+  - `title` - Task name
+  - `status` - Current status (todo, completed, someday)
+  - `energy` - Energy level (low, neutral, high)
+  - `date` - Scheduled date (if set)
+  - `projectId` - Associated project (if assigned)
+  - `isEvening` - Evening flag for work/life balance
+</ParamField>
+
+<ParamField path="projects" type="Project[]">
+  Array of your projects with:
+  - `title` - Project name
+  - `color` - Visual identifier
+</ParamField>
+
+<ParamField path="localTime" type="string">
+  Current timestamp in ISO format for time-aware recommendations.
+</ParamField>
+
+## Example briefing
+
+Here's what a typical AI Briefing looks like:
+
+```markdown
+# Your Daily Briefing for Tuesday, March 4, 2026
+
+## 🎯 Today's Top Priorities
+
+- **Review Q3 financial report** (High Focus) - Project: Finance
+- **Prepare presentation slides** (High Focus) - Project: Marketing
+- **Team standup at 10am** (Neutral) - Unassigned
+
+## 📅 Upcoming This Week
+
+You have 5 tasks scheduled for the next 7 days:
+- 2 high-focus tasks (Thursday)
+- 1 deadline on Friday
+
+## ⚡ Energy Recommendations
+
+**Morning (High Focus):**
+Start with "Review Q3 financial report" while your energy is peak.
+
+**Afternoon (Neutral):**
+Handle communication and admin tasks after lunch.
+
+**Evening (Low Energy):**
+You have 3 low-energy tasks tagged for evening work.
+
+## 📊 Project Balance
+
+- Finance: 4 active tasks
+- Marketing: 3 active tasks  
+- Personal: 2 tasks
+
+## ✨ Quick Wins
+
+Complete these 3 low-energy tasks to build momentum:
+- Pay electric bill
+- Order office supplies
+- Schedule dentist appointment
+```
+
+## When to use AI Briefing
+
+<CardGroup cols={2}>
+  <Card title="Morning planning" icon="sunrise">
+    Start your day by reviewing priorities and setting intentions.
+  </Card>
+  <Card title="After task updates" icon="arrows-rotate">
+    Regenerate when you've added or completed significant tasks.
+  </Card>
+  <Card title="Weekly review" icon="calendar-week">
+    Get a high-level view of your workload distribution.
+  </Card>
+  <Card title="Energy planning" icon="bolt">
+    Understand which tasks to tackle based on your current energy level.
+  </Card>
+</CardGroup>
+
+## Privacy and data
+
+<Warning>
+  Your tasks and project names are sent to Google's Gemini API. The data is processed in real-time and not stored by Google beyond the API call. Review [Google's Gemini API privacy policy](https://ai.google.dev/gemini-api/terms) if you have concerns.
+</Warning>
+
+**What's sent:**
+- Task titles, energy levels, dates, and project associations
+- Project names and colors
+- Current timestamp
+
+**What's NOT sent:**
+- Task notes (only visible to you)
+- User email or account information
+- Historical completion data
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Briefing generation fails">
+    **Possible causes:**
+    - No active tasks or projects (requires at least one)
+    - Gemini API key not configured in Firebase Secret Manager
+    - Network connectivity issues
+
+    **Solution:**
+    - Add some tasks first
+    - Verify `GEMINI_API_KEY` is set in your Firebase project
+    - Check browser console for detailed error messages
+  </Accordion>
+
+  <Accordion title="Briefing feels generic">
+    **Tips for better briefings:**
+    - Add energy levels to tasks (low/neutral/high)
+    - Assign tasks to projects for context
+    - Set dates for time-sensitive work
+    - Use descriptive task titles
+  </Accordion>
+
+  <Accordion title="Want to customize the briefing format?">
+    The AI prompt is defined in `functions/index.js`. You can modify the system prompt to change:
+    - Tone and style (formal vs casual)
+    - Section structure
+    - Focus areas (deadlines vs energy vs projects)
+
+    See [Cloud Functions documentation](/development/cloud-functions#generatebriefing) for implementation details.
+  </Accordion>
+</AccordionGroup>
+
+## Technical details
+
+The briefing feature is implemented using:
+
+- **Frontend**: `src/pages/AIBriefing.tsx` (React component)
+- **Hook**: `src/features/ai-briefing/hooks/useBriefingData.ts` (data fetching)
+- **Backend**: `functions/index.js` - `generateBriefing` Cloud Function
+- **AI Model**: Gemini 2.5 Flash via `@google/generative-ai`
+
+For developer documentation, see:
+- [Cloud Functions reference](/development/cloud-functions#generatebriefing)
+- [Firebase Setup](/development/firebase-setup)
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="AI Magic Import" icon="wand-magic-sparkles" href="/features/ai-import">
+    Extract tasks from documents using AI
+  </Card>
+  <Card title="Productivity Metrics" icon="chart-line" href="/features/productivity-metrics">
+    Track velocity and focus time
+  </Card>
+  <Card title="Energy Filtering" icon="bolt" href="/features/energy-filtering">
+    Match tasks to your mental state
+  </Card>
+  <Card title="Inbox View" icon="inbox" href="/guide/inbox">
+    Your deep work dashboard
+  </Card>
+</CardGroup>
